@@ -180,7 +180,7 @@
             document.getElementById('repMonth').value = new Date().toISOString().slice(0, 7);
             setTheme(localStorage.getItem('userTheme') || 'dark');
             renderEmployees(); updateSelectors();
-            if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js?v=4');
+            if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js?v=5')
         };
     </script>
 </body>
