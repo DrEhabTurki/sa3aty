@@ -10,27 +10,54 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        body { font-family: 'Cairo', sans-serif; background-color: #121417; color: #e0e6ed; height: 100vh; overflow: hidden; display: flex; flex-direction: column; font-size: 1.1rem; }
-        .glass { background: rgba(30, 32, 35, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
+        :root { --main-bg: #121417; --card-bg: rgba(30, 32, 35, 0.85); --text: #e0e6ed; --accent: #3b82f6; }
+        
+        body { font-family: 'Cairo', sans-serif; background-color: var(--main-bg); color: var(--text); height: 100vh; overflow: hidden; display: flex; flex-direction: column; transition: 0.3s; }
+        .glass { background: var(--card-bg); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
         .tab-content { display: none; flex-grow: 1; overflow-y: auto; padding: 12px; }
         .active-tab { display: block; }
-        /* شريط التابات النحيف */
-        nav button { padding: 8px 5px !important; font-size: 0.9rem !important; transition: 0.2s; }
-        .active-btn { border-bottom: 2px solid #3b82f6; color: #3b82f6; font-weight: bold; }
-        input, select { background: #1c1f24 !important; border: 1px solid #444 !important; color: #fff !important; border-radius: 12px !important; padding: 10px; font-size: 0.95rem !important; }
-        .btn-action { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
-        th { padding: 10px; border-bottom: 2px solid #333; font-size: 0.85rem; }
-        td { padding: 8px; border-bottom: 1px solid #222; font-size: 0.85rem; }
+        nav button { padding: 8px 5px !important; font-size: 0.9rem !important; transition: 0.2s; color: var(--text); opacity: 0.6; }
+        .active-btn { border-bottom: 2px solid var(--accent); color: var(--accent) !important; font-weight: bold; opacity: 1; }
+        input, select { background: rgba(0,0,0,0.2) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: var(--text) !important; border-radius: 12px !important; padding: 10px; font-size: 0.95rem !important; }
+        .btn-action { background: var(--accent); color: white; }
+        
+        /* القائمة المنسدلة */
+        #themeMenu { display: none; position: absolute; left: 15px; top: 55px; z-index: 100; width: 150px; background: #1f2937; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); }
+        #themeMenu button { width: 100%; text-align: right; padding: 10px 15px; font-size: 0.85rem; border-bottom: 1px solid rgba(255,255,255,0.05); color: #fff; }
+        #themeMenu button:last-child { border: none; }
+        
+        /* المظاهر الجوهرية */
+        .theme-light { --main-bg: #f3f4f6; --card-bg: #ffffff; --text: #1f2937; --accent: #2563eb; }
+        .theme-gold { --main-bg: #1a1610; --card-bg: #2a2419; --text: #f3e5ab; --accent: #d4af37; }
+        .theme-cyber { --main-bg: #0d0221; --card-bg: #190e38; --text: #00f2ff; --accent: #ff00ff; }
+        .theme-forest { --main-bg: #0a1a12; --card-bg: #142d20; --text: #dcfce7; --accent: #22c55e; }
+        .theme-rose { --main-bg: #1a1012; --card-bg: #2d1419; --text: #ffe4e6; --accent: #f43f5e; }
     </style>
 </head>
-<body>
-    <!-- الهيدر: اللوجو بجانب الاسم -->
-    <header class="p-3 bg-gray-900/40 flex items-center justify-center gap-3 border-b border-gray-800">
-        <img src="logo.png" alt="Logo" class="w-10 h-10 object-contain">
-        <h1 class="text-2xl font-black text-blue-400 tracking-tighter">Sa3aty</h1>
+<body id="mainBody">
+
+    <header class="p-3 bg-gray-900/40 flex items-center justify-between px-5 border-b border-gray-800 relative">
+        <!-- زر الثلاث نقاط -->
+        <button onclick="toggleThemeMenu()" class="text-2xl text-gray-400">⋮</button>
+        
+        <div class="flex items-center gap-2">
+            <img src="logo.png" alt="Logo" class="w-8 h-8 object-contain">
+            <h1 class="text-xl font-black text-blue-400">Sa3aty</h1>
+        </div>
+        
+        <div class="w-6"></div> <!-- للموازنة -->
+
+        <!-- قائمة الأشكال -->
+        <div id="themeMenu">
+            <button onclick="setTheme('default')">🔵 المظهر الافتراضي</button>
+            <button onclick="setTheme('light')">⚪ المظهر المضيء</button>
+            <button onclick="setTheme('gold')">🟡 المظهر الذهبي</button>
+            <button onclick="setTheme('cyber')">🟣 سايبر بانك</button>
+            <button onclick="setTheme('forest')">🟢 المظهر الهادئ</button>
+            <button onclick="setTheme('rose')">🔴 المظهر الوردي</button>
+        </div>
     </header>
     
-    <!-- التابات النحيفة (30% من الحجم السابق) -->
     <nav class="flex justify-around bg-gray-900/60 shadow-md">
         <button onclick="showTab('empTab', this)" class="w-full active-btn">الموظفين</button>
         <button onclick="showTab('logTab', this)" class="w-full">التسجيل</button>
@@ -41,9 +68,8 @@
         <!-- التبويب 1: الموظفين -->
         <div id="empTab" class="tab-content active-tab">
             <div class="glass p-5 rounded-2xl">
-                <h3 class="text-center mb-4 text-gray-400 font-bold text-lg">قاعدة البيانات</h3>
                 <div class="flex gap-2 mb-4">
-                    <input type="text" id="newEmpName" placeholder="اسم الموظف" class="flex-grow">
+                    <input type="text" id="newEmpName" placeholder="إضافة موظف جديد..." class="flex-grow">
                     <button onclick="addEmployee()" class="btn-action px-5 rounded-xl font-bold text-2xl">+</button>
                 </div>
                 <ul id="empList" class="space-y-2"></ul>
@@ -52,66 +78,40 @@
 
         <!-- التبويب 2: التسجيل -->
         <div id="logTab" class="tab-content">
-            <div class="glass p-5 rounded-2xl space-y-3 shadow-xl">
-                <div>
-                    <label class="block text-[10px] text-gray-500 mb-1 mr-1">الموظف</label>
-                    <select id="logNameSelect" class="w-full"></select>
-                </div>
-                <div>
-                    <label class="block text-[10px] text-gray-500 mb-1 mr-1">التاريخ</label>
-                    <input type="date" id="logDate" class="w-full">
-                </div>
+            <div class="glass p-5 rounded-2xl space-y-4">
+                <select id="logNameSelect" class="w-full"></select>
+                <input type="date" id="logDate" class="w-full">
                 <div class="flex gap-3">
-                    <div class="w-1/2">
-                        <label class="block text-[10px] text-gray-500 mb-1 text-center">حضور</label>
-                        <input type="time" id="logIn" class="w-full">
-                    </div>
-                    <div class="w-1/2">
-                        <label class="block text-[10px] text-gray-500 mb-1 text-center">انصراف</label>
-                        <input type="time" id="logOut" class="w-full">
-                    </div>
+                    <input type="time" id="logIn" class="w-full" placeholder="حضور">
+                    <input type="time" id="logOut" class="w-full" placeholder="انصراف">
                 </div>
-                <button onclick="addLog()" class="btn-action w-full py-4 rounded-xl font-bold text-lg mt-3">حفظ</button>
+                <button onclick="addLog()" class="btn-action w-full py-4 rounded-xl font-bold">حفظ البيانات</button>
             </div>
         </div>
 
         <!-- التبويب 3: التقرير -->
         <div id="repTab" class="tab-content">
             <div class="flex gap-2 mb-3">
-                <select id="repNameSelect" onchange="renderReport()" class="w-1/2 font-bold"></select>
-                <input type="month" id="repMonth" onchange="renderReport()" class="w-1/2 font-bold">
+                <select id="repNameSelect" onchange="renderReport()" class="w-1/2"></select>
+                <input type="month" id="repMonth" onchange="renderReport()" class="w-1/2">
             </div>
             
             <div id="reportContainer" class="glass p-4 rounded-2xl">
-                <div id="printHeader" class="text-center mb-4 border-b-2 border-blue-500 pb-2 hidden">
-                    <h1 class="text-xl font-bold text-white">Sa3aty Report</h1>
-                    <p id="printInfo" class="text-xs text-blue-300"></p>
-                </div>
-
-                <div class="text-center mb-4 bg-blue-500/5 py-3 rounded-xl border border-blue-500/10">
-                    <p class="text-[10px] text-gray-400 font-bold uppercase">إجمالي الساعات</p>
+                <div class="text-center mb-4 py-3 border-b border-white/10">
+                    <p class="text-xs opacity-60">إجمالي الشهر</p>
                     <h2 id="monthTotal" class="text-4xl font-black text-blue-400">0:00 Hr</h2>
                 </div>
-                
                 <div class="overflow-x-auto">
-                    <table class="w-full text-center" id="reportTable">
-                        <thead>
-                            <tr class="text-blue-300">
-                                <th>تاريخ</th>
-                                <th>حضور</th>
-                                <th>انصراف</th>
-                                <th>مدة</th>
-                            </tr>
-                        </thead>
-                        <tbody id="reportItems" class="text-gray-300"></tbody>
+                    <table class="w-full text-center">
+                        <thead><tr class="opacity-60 text-xs"><th>التاريخ</th><th>حضور</th><th>انصراف</th><th>المدة</th></tr></thead>
+                        <tbody id="reportItems"></tbody>
                     </table>
                 </div>
             </div>
-            
-            <div class="grid grid-cols-3 gap-2 mt-4 pb-4">
-                <button onclick="exportXLSX()" class="bg-green-600/10 text-green-400 py-3 rounded-xl font-bold border border-green-600/20 text-xs">Excel</button>
-                <button onclick="exportSmartPDF()" class="bg-red-600/10 text-red-400 py-3 rounded-xl font-bold border border-red-600/20 text-xs">PDF</button>
-                <button onclick="exportPNG()" class="bg-purple-600/10 text-purple-400 py-3 rounded-xl font-bold border border-purple-600/20 text-xs">صورة</button>
+            <div class="grid grid-cols-3 gap-2 mt-4">
+                <button onclick="exportXLSX()" class="bg-gray-700 py-3 rounded-xl text-xs">Excel</button>
+                <button onclick="exportSmartPDF()" class="bg-gray-700 py-3 rounded-xl text-xs">PDF</button>
+                <button onclick="exportPNG()" class="bg-gray-700 py-3 rounded-xl text-xs">صورة</button>
             </div>
         </div>
     </main>
@@ -119,6 +119,18 @@
     <script>
         let employees = JSON.parse(localStorage.getItem('employees') || '[]');
         let logs = JSON.parse(localStorage.getItem('logs') || '[]');
+
+        function toggleThemeMenu() {
+            const menu = document.getElementById('themeMenu');
+            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function setTheme(themeName) {
+            const body = document.getElementById('mainBody');
+            body.className = themeName === 'default' ? '' : 'theme-' + themeName;
+            localStorage.setItem('userTheme', themeName);
+            document.getElementById('themeMenu').style.display = 'none';
+        }
 
         function showTab(tabId, btn) {
             document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
@@ -141,14 +153,14 @@
         function renderEmployees() {
             const list = document.getElementById('empList');
             list.innerHTML = employees.map((e, i) => `
-                <li class="flex justify-between items-center p-3 bg-gray-800/40 rounded-xl border border-white/5">
-                    <span class="font-bold text-sm">${e}</span>
-                    <button onclick="delEmp(${i})" class="text-red-500 bg-red-500/10 px-3 py-1 rounded-lg text-xs">حذف</button>
+                <li class="flex justify-between items-center p-3 bg-black/20 rounded-xl">
+                    <span>${e}</span>
+                    <button onclick="delEmp(${i})" class="text-red-500 text-xs">حذف</button>
                 </li>`).join('');
         }
 
         function delEmp(i) {
-            if(confirm('سيتم حذف الموظف، هل أنت متأكد؟')) {
+            if(confirm('حذف الموظف؟')) {
                 employees.splice(i, 1);
                 localStorage.setItem('employees', JSON.stringify(employees));
                 renderEmployees();
@@ -157,11 +169,9 @@
         }
 
         function updateSelectors() {
-            const logSel = document.getElementById('logNameSelect');
-            const repSel = document.getElementById('repNameSelect');
             const options = employees.map(e => `<option value="${e}">${e}</option>`).join('');
-            if(logSel) logSel.innerHTML = options;
-            if(repSel) repSel.innerHTML = options;
+            document.getElementById('logNameSelect').innerHTML = options;
+            document.getElementById('repNameSelect').innerHTML = options;
         }
 
         function addLog() {
@@ -172,7 +182,7 @@
             if(!name || !date || !tIn || !tOut) return alert('أكمل البيانات');
             logs.push({ name, date, in: tIn, out: tOut });
             localStorage.setItem('logs', JSON.stringify(logs));
-            alert('تم التسجيل بنجاح');
+            alert('تم الحفظ');
         }
 
         function calc(s, e) {
@@ -195,76 +205,57 @@
             const body = document.getElementById('reportItems');
             body.innerHTML = '';
             let total = 0;
-
             if(!name) return;
-
-            const filtered = logs.filter(l => l.name === name && l.date.startsWith(month));
-            filtered.sort((a,b) => new Date(a.date) - new Date(b.date))
+            logs.filter(l => l.name === name && l.date.startsWith(month))
+                .sort((a,b) => new Date(a.date) - new Date(b.date))
                 .forEach(l => {
                     const dur = calc(l.in, l.out);
                     total += dur;
-                    body.innerHTML += `
-                        <tr>
-                            <td>${l.date.split('-').slice(1).join('/')}</td>
-                            <td>${l.in}</td>
-                            <td>${l.out}</td>
-                            <td class="text-blue-400 font-bold">${fmt(dur)}</td>
-                        </tr>`;
+                    body.innerHTML += `<tr class="border-b border-white/5 font-bold"><td class="py-2 text-[10px]">${l.date}</td><td>${l.in}</td><td>${l.out}</td><td class="text-blue-400">${fmt(dur)}</td></tr>`;
                 });
-            
             document.getElementById('monthTotal').innerText = `${fmt(total)} Hr`;
-            document.getElementById('printInfo').innerText = `الموظف: ${name} | الشهر: ${month}`;
-        }
-
-        function exportSmartPDF() {
-            const header = document.getElementById('printHeader');
-            header.style.display = 'block';
-            html2canvas(document.querySelector("#reportContainer"), { backgroundColor: '#121417', scale: 2.5 }).then(canvas => {
-                const imgData = canvas.toDataURL('image/png');
-                const { jsPDF } = window.jspdf;
-                const pdf = new jsPDF('p', 'mm', 'a4');
-                const pdfWidth = pdf.internal.pageSize.getWidth();
-                const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-                pdf.addImage(imgData, 'PNG', 0, 10, pdfWidth, pdfHeight);
-                pdf.save(`Sa3aty_${document.getElementById('repNameSelect').value}.pdf`);
-                header.style.display = 'none';
-            });
-        }
-
-        function exportPNG() {
-            const header = document.getElementById('printHeader');
-            header.style.display = 'block';
-            html2canvas(document.querySelector("#reportContainer"), { backgroundColor: '#121417', scale: 2.5 }).then(canvas => {
-                const link = document.createElement('a');
-                link.download = `Sa3aty_${document.getElementById('repNameSelect').value}.png`;
-                link.href = canvas.toDataURL();
-                link.click();
-                header.style.display = 'none';
-            });
-        }
-
-        function exportXLSX() {
-            const name = document.getElementById('repNameSelect').value;
-            const month = document.getElementById('repMonth').value;
-            const filtered = logs.filter(l => l.name === name && l.date.startsWith(month)).map(l => {
-                const duration = calc(l.in, l.out);
-                return { "الموظف": l.name, "التاريخ": l.date, "حضور": l.in, "انصراف": l.out, "ساعات": fmt(duration) };
-            });
-            const ws = XLSX.utils.json_to_sheet(filtered);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Attendance");
-            XLSX.writeFile(wb, `Sa3aty_${name}_${month}.xlsx`);
         }
 
         window.onload = () => {
             document.getElementById('logDate').valueAsDate = new Date();
             document.getElementById('repMonth').value = new Date().toISOString().slice(0, 7);
+            const savedTheme = localStorage.getItem('userTheme') || 'default';
+            setTheme(savedTheme);
             renderEmployees();
             updateSelectors();
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('./sw.js').then(() => console.log('SW Registered'));
-            }
+            if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
         };
+
+        // وظائف التصدير الأساسية
+        function exportXLSX() {
+            const name = document.getElementById('repNameSelect').value;
+            const month = document.getElementById('repMonth').value;
+            const data = logs.filter(l => l.name === name && l.date.startsWith(month)).map(l => ({
+                "الموظف": l.name, "التاريخ": l.date, "حضور": l.in, "انصراف": l.out, "ساعات": fmt(calc(l.in, l.out))
+            }));
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Report");
+            XLSX.writeFile(wb, `Sa3aty_${name}.xlsx`);
+        }
+        
+        function exportPNG() {
+            html2canvas(document.querySelector("#reportContainer"), { backgroundColor: getComputedStyle(document.body).getPropertyValue('--main-bg') }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = 'Report.png';
+                link.href = canvas.toDataURL();
+                link.click();
+            });
+        }
+
+        function exportSmartPDF() {
+            html2canvas(document.querySelector("#reportContainer"), { backgroundColor: getComputedStyle(document.body).getPropertyValue('--main-bg') }).then(canvas => {
+                const img = canvas.toDataURL('image/png');
+                const pdf = new jspdf.jsPDF();
+                pdf.addImage(img, 'PNG', 10, 10, 190, 0);
+                pdf.save("Report.pdf");
+            });
+        }
     </script>
 </body>
 </html>
