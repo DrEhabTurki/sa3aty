@@ -3,185 +3,238 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>تايم كيبر الذكي</title>
+    <title>تايم كيبر برو</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    
     <style>
-        :root { --main-bg: #121417; --card-bg: rgba(30, 32, 35, 0.7); }
-        body { 
-            font-family: 'Cairo', sans-serif; 
-            background-color: var(--main-bg); 
-            color: #e0e6ed; 
-            margin: 0; 
-            display: flex; 
-            justify-content: center;
-            min-height: 100vh;
-        }
-        .app-container { width: 100%; max-width: 450px; padding: 20px; }
-        .glass { 
-            background: var(--card-bg); 
-            backdrop-filter: blur(20px); 
-            border: 1px solid rgba(255, 255, 255, 0.08); 
-            border-radius: 24px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-        input, select { 
-            background: #1c1f24 !important; 
-            border: 1px solid #333 !important; 
-            color: #fff !important; 
-            text-align: center;
-            border-radius: 12px !important;
-        }
-        .btn-glow {
-            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
-            transition: all 0.3s ease;
-        }
-        .btn-glow:active { transform: scale(0.95); }
-        .table-scroll { overflow-x: auto; border-radius: 15px; }
-        th { background: rgba(59, 130, 246, 0.1); color: #60a5fa; font-weight: bold; padding: 12px; }
-        td { padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.85rem; }
-        .total-box { 
-            background: linear-gradient(180deg, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0) 100%);
-            border: 1px solid rgba(59, 130, 246, 0.3);
-        }
+        body { font-family: 'Cairo', sans-serif; background-color: #121417; color: #e0e6ed; height: 100vh; overflow: hidden; }
+        .glass { background: rgba(30, 32, 35, 0.8); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        .tab-content { display: none; height: calc(100vh - 160px); overflow-y: auto; }
+        .active-tab { display: block; }
+        .active-btn { border-bottom: 3px solid #3b82f6; color: #3b82f6; }
+        input, select { background: #1c1f24 !important; border: 1px solid #333 !important; color: #fff !important; border-radius: 12px !important; padding: 10px; }
+        .btn-action { background: linear-gradient(135deg, #3b82f6, #1d4ed8); transition: 0.3s; }
     </style>
 </head>
-<body>
-    <div class="app-container">
-        <header class="text-center mb-8">
-            <h1 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">تايم كيبر الذكي</h1>
-            <p class="text-gray-500 text-sm mt-2">إدارة ساعات العمل باحترافية</p>
-        </header>
+<body class="flex flex-col">
+    <!-- Header & Tabs -->
+    <header class="p-4 text-center">
+        <h1 class="text-xl font-bold text-blue-400">تايم كيبر الذكي</h1>
+    </header>
+    
+    <nav class="flex justify-around border-b border-gray-800 mb-4 bg-gray-900/50">
+        <button onclick="showTab('empTab', this)" class="p-3 text-sm active-btn">الموظفين</button>
+        <button onclick="showTab('logTab', this)" class="p-3 text-sm">التسجيل</button>
+        <button onclick="showTab('repTab', this)" class="p-3 text-sm">التقرير</button>
+    </nav>
 
-        <!-- تسجيل الدخول -->
-        <div class="glass p-6 mb-6">
-            <h2 class="text-lg mb-4 text-center border-b border-gray-700 pb-2">تسجيل الحضور</h2>
-            <div class="space-y-4">
-                <input type="text" id="empName" placeholder="اسم الموظف" class="w-full p-3">
-                <input type="date" id="workDate" class="w-full p-3">
+    <!-- Content Area -->
+    <main class="flex-grow px-4">
+        
+        <!-- Tab 1: الموظفين -->
+        <div id="empTab" class="tab-content active-tab">
+            <div class="glass p-4 rounded-2xl">
+                <h3 class="text-center mb-4 text-sm text-gray-400">إدارة قاعدة بيانات الموظفين</h3>
+                <div class="flex gap-2 mb-4">
+                    <input type="text" id="newEmpName" placeholder="اسم الموظف الجديد" class="flex-grow">
+                    <button onclick="addEmployee()" class="btn-action px-4 rounded-xl font-bold text-2xl">+</button>
+                </div>
+                <ul id="empList" class="space-y-2"></ul>
+            </div>
+        </div>
+
+        <!-- Tab 2: التسجيل -->
+        <div id="logTab" class="tab-content">
+            <div class="glass p-5 rounded-2xl space-y-4">
+                <div>
+                    <label class="block text-xs text-gray-500 mb-1">اختر الموظف</label>
+                    <select id="logNameSelect" class="w-full"></select>
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-500 mb-1">التاريخ</label>
+                    <input type="date" id="logDate" class="w-full">
+                </div>
                 <div class="flex gap-2">
                     <div class="w-1/2">
-                        <label class="block text-[10px] text-gray-400 mb-1 text-center">وقت الحضور</label>
-                        <input type="time" id="tIn" class="w-full p-3">
+                        <label class="block text-xs text-gray-500 mb-1">حضور</label>
+                        <input type="time" id="logIn" class="w-full">
                     </div>
                     <div class="w-1/2">
-                        <label class="block text-[10px] text-gray-400 mb-1 text-center">وقت الانصراف</label>
-                        <input type="time" id="tOut" class="w-full p-3">
+                        <label class="block text-xs text-gray-500 mb-1">انصراف</label>
+                        <input type="time" id="logOut" class="w-full">
                     </div>
                 </div>
-                <button onclick="addEntry()" class="btn-glow w-full py-4 rounded-2xl font-bold text-white mt-4">إضافة السجل</button>
+                <button onclick="addLog()" class="btn-action w-full py-3 rounded-xl font-bold mt-4">تسجيل المواعيد</button>
             </div>
         </div>
 
-        <!-- عرض التقرير -->
-        <div id="reportArea" class="glass p-4 mb-6">
-            <h3 class="text-md mb-4 text-center font-bold text-blue-300">سجل البيانات</h3>
-            <div class="table-scroll">
-                <table class="w-full text-center" id="reportTable">
-                    <thead>
-                        <tr>
-                            <th class="text-xs">الموظف</th>
-                            <th class="text-xs">التاريخ</th>
-                            <th class="text-xs">المدة</th>
-                            <th class="text-xs">حذف</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tableBody" class="text-gray-300"></tbody>
-                </table>
+        <!-- Tab 3: التقرير -->
+        <div id="repTab" class="tab-content">
+            <div class="flex gap-2 mb-4">
+                <select id="repNameSelect" onchange="renderReport()" class="w-1/2 text-xs"></select>
+                <input type="month" id="repMonth" onchange="renderReport()" class="w-1/2 text-xs">
             </div>
             
-            <div class="total-box mt-6 p-4 rounded-2xl text-center">
-                <span class="text-xs text-gray-400 block mb-1">إجمالي الساعات</span>
-                <span id="grandTotal" class="text-3xl font-bold text-blue-400">0:00 Hr</span>
+            <div id="reportContainer" class="glass p-3 rounded-2xl overflow-hidden">
+                <div class="text-center mb-4 border-b border-gray-700 pb-2">
+                    <p class="text-xs text-gray-400">إجمالي ساعات الشهر</p>
+                    <h2 id="monthTotal" class="text-3xl font-bold text-blue-400">0:00 Hr</h2>
+                </div>
+                <div class="max-h-60 overflow-y-auto">
+                    <table class="w-full text-[10px] text-center" id="reportTable">
+                        <thead>
+                            <tr class="text-blue-300">
+                                <th>التاريخ</th>
+                                <th>حضور</th>
+                                <th>انصراف</th>
+                                <th>المدة</th>
+                                <th>حذف</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reportItems"></tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-3 gap-2 mt-4 pb-10">
+                <button onclick="exportXLSX()" class="bg-green-900/30 text-green-400 p-2 rounded-xl text-[10px] border border-green-900/50">Excel</button>
+                <button onclick="exportSmartPDF()" class="bg-red-900/30 text-red-400 p-2 rounded-xl text-[10px] border border-red-900/50">PDF</button>
+                <button onclick="exportPNG()" class="bg-purple-900/30 text-purple-400 p-2 rounded-xl text-[10px] border border-purple-900/50">صورة</button>
             </div>
         </div>
 
-        <!-- أزرار التصدير -->
-        <div class="grid grid-cols-3 gap-2 mb-10">
-            <button onclick="exportXLSX()" class="bg-gray-800 text-green-400 p-3 rounded-xl border border-green-900/30 text-xs">Excel</button>
-            <button onclick="exportPDF()" class="bg-gray-800 text-red-400 p-3 rounded-xl border border-red-900/30 text-xs">PDF</button>
-            <button onclick="exportPNG()" class="bg-gray-800 text-purple-400 p-3 rounded-xl border border-purple-900/30 text-xs">صورة</button>
-        </div>
-    </div>
+    </main>
 
     <script>
-        let data = JSON.parse(localStorage.getItem('logs') || '[]');
+        let employees = JSON.parse(localStorage.getItem('employees') || '[]');
+        let logs = JSON.parse(localStorage.getItem('logs') || '[]');
 
-        function calc(start, end) {
-            const [h1, m1] = start.split(':').map(Number);
-            const [h2, m2] = end.split(':').map(Number);
-            let diff = (h2 * 60 + m2) - (h1 * 60 + m1);
-            if (diff < 0) diff += 1440; 
-            return diff / 60;
+        function showTab(tabId, btn) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active-tab'));
+            document.querySelectorAll('nav button').forEach(b => b.classList.remove('active-btn'));
+            document.getElementById(tabId).classList.add('active-tab');
+            btn.classList.add('active-btn');
+            updateSelectors();
         }
 
-        function formatTime(decimal) {
-            const h = Math.floor(decimal);
-            const m = Math.round((decimal - h) * 60);
-            return `${h}:${m.toString().padStart(2, '0')} Hr`;
+        // إطارة الموظفين
+        function addEmployee() {
+            const name = document.getElementById('newEmpName').value.trim();
+            if(!name) return;
+            employees.push(name);
+            localStorage.setItem('employees', JSON.stringify(employees));
+            document.getElementById('newEmpName').value = '';
+            renderEmployees();
         }
 
-        function render() {
-            const body = document.getElementById('tableBody');
+        function renderEmployees() {
+            const list = document.getElementById('empList');
+            list.innerHTML = employees.map((e, i) => `
+                <li class="flex justify-between items-center p-3 bg-gray-800/50 rounded-xl">
+                    <span>${e}</span>
+                    <button onclick="delEmp(${i})" class="text-red-500 text-xs">حذف</button>
+                </li>`).join('');
+            updateSelectors();
+        }
+
+        function delEmp(i) { if(confirm('حذف الموظف سيؤثر على تقاريره، متابعة؟')) { employees.splice(i, 1); localStorage.setItem('employees', JSON.stringify(employees)); renderEmployees(); } }
+
+        function updateSelectors() {
+            const sels = [document.getElementById('logNameSelect'), document.getElementById('repNameSelect')];
+            sels.forEach(s => {
+                if(s) s.innerHTML = employees.map(e => `<option value="${e}">${e}</option>`).join('');
+            });
+        }
+
+        // تسجيل المواعيد
+        function addLog() {
+            const log = {
+                name: document.getElementById('logNameSelect').value,
+                date: document.getElementById('logDate').value,
+                in: document.getElementById('logIn').value,
+                out: document.getElementById('logOut').value
+            };
+            if(!log.name || !log.date || !log.in || !log.out) return alert('أكمل البيانات');
+            logs.push(log);
+            localStorage.setItem('logs', JSON.stringify(logs));
+            alert('تم التسجيل بنجاح');
+        }
+
+        // التقرير
+        function calc(s, e) {
+            const [h1, m1] = s.split(':').map(Number);
+            const [h2, m2] = e.split(':').map(Number);
+            let d = (h2*60+m2) - (h1*60+m1);
+            return d < 0 ? (d+1440)/60 : d/60;
+        }
+
+        function renderReport() {
+            const name = document.getElementById('repNameSelect').value;
+            const month = document.getElementById('repMonth').value;
+            const body = document.getElementById('reportItems');
             body.innerHTML = '';
             let total = 0;
-            data.forEach((item, i) => {
-                const duration = calc(item.in, item.out);
-                total += duration;
+
+            logs.filter(l => l.name === name && l.date.startsWith(month)).forEach((l, i) => {
+                const dur = calc(l.in, l.out);
+                total += dur;
                 body.innerHTML += `
                     <tr>
-                        <td><input type="text" value="${item.name}" onchange="update(${i},'name',this.value)" class="w-full bg-transparent border-none text-xs"></td>
-                        <td><input type="date" value="${item.date}" onchange="update(${i},'date',this.value)" class="w-full bg-transparent border-none text-[10px]"></td>
-                        <td class="font-bold text-blue-300 text-xs">${formatTime(duration)}</td>
-                        <td><button onclick="del(${i})" class="text-red-900 bg-red-500/10 w-6 h-6 rounded-full">✕</button></td>
+                        <td class="py-2">${l.date}</td>
+                        <td>${l.in}</td>
+                        <td>${l.out}</td>
+                        <td class="text-blue-400 font-bold">${Math.floor(dur)}:${Math.round((dur%1)*60).toString().padStart(2,'0')}</td>
+                        <td><button onclick="delLog('${l.date}','${l.name}')" class="text-red-500">✕</button></td>
                     </tr>`;
             });
-            document.getElementById('grandTotal').innerText = formatTime(total);
-            localStorage.setItem('logs', JSON.stringify(data));
+            document.getElementById('monthTotal').innerText = `${Math.floor(total)}:${Math.round((total%1)*60).toString().padStart(2,'0')} Hr`;
         }
 
-        function addEntry() {
-            const name = document.getElementById('empName').value;
-            const date = document.getElementById('workDate').value;
-            const tIn = document.getElementById('tIn').value;
-            const tOut = document.getElementById('tOut').value;
-            if(!name || !date || !tIn || !tOut) return alert('برجاء ملء جميع الحقول');
-            data.push({name, date, in: tIn, out: tOut});
-            render();
+        function delLog(date, name) {
+            logs = logs.filter(l => !(l.date === date && l.name === name));
+            localStorage.setItem('logs', JSON.stringify(logs));
+            renderReport();
         }
 
-        function update(i, k, v) { data[i][k] = v; render(); }
-        function del(i) { if(confirm('هل تريد الحذف؟')) { data.splice(i, 1); render(); } }
-
-        function exportXLSX() {
-            const ws = XLSX.utils.json_to_sheet(data);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Report");
-            XLSX.writeFile(wb, "Time_Report.xlsx");
-        }
-
-        function exportPDF() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            doc.autoTable({ html: '#reportTable', theme: 'grid' });
-            doc.save('Report.pdf');
+        // التصدير الذكي (حل مشكلة العربي)
+        function exportSmartPDF() {
+            html2canvas(document.querySelector("#reportContainer"), { backgroundColor: '#121417', scale: 2 }).then(canvas => {
+                const imgData = canvas.toDataURL('image/png');
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                const imgProps = pdf.getImageProperties(imgData);
+                const pdfWidth = pdf.internal.pageSize.getWidth();
+                const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+                pdf.addImage(imgData, 'PNG', 0, 10, pdfWidth, pdfHeight);
+                pdf.save(`تقرير_${document.getElementById('repNameSelect').value}.pdf`);
+            });
         }
 
         function exportPNG() {
-            html2canvas(document.querySelector("#reportArea"), {backgroundColor: '#121417'}).then(canvas => {
+            html2canvas(document.querySelector("#reportContainer"), { backgroundColor: '#121417', scale: 2 }).then(canvas => {
                 const link = document.createElement('a');
                 link.download = 'Report.png';
                 link.href = canvas.toDataURL();
                 link.click();
             });
         }
-        render();
+
+        function exportXLSX() {
+            const name = document.getElementById('repNameSelect').value;
+            const filtered = logs.filter(l => l.name === name);
+            const ws = XLSX.utils.json_to_sheet(filtered);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Report");
+            XLSX.writeFile(wb, "Attendance.xlsx");
+        }
+
+        // البداية
+        document.getElementById('logDate').valueAsDate = new Date();
+        document.getElementById('repMonth').value = new Date().toISOString().slice(0, 7);
+        renderEmployees();
     </script>
 </body>
 </html>
