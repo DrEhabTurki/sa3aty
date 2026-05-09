@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="manifest" href="manifest.json">
     <title>Sa3aty - ساعاتي</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -11,7 +12,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         :root { --main-bg: #121417; --card-bg: rgba(30, 32, 35, 0.85); --text: #e0e6ed; --accent: #3b82f6; }
-        
         body { font-family: 'Cairo', sans-serif; background-color: var(--main-bg); color: var(--text); height: 100vh; overflow: hidden; display: flex; flex-direction: column; transition: 0.3s; }
         .glass { background: var(--card-bg); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
         .tab-content { display: none; flex-grow: 1; overflow-y: auto; padding: 12px; }
@@ -20,13 +20,8 @@
         .active-btn { border-bottom: 2px solid var(--accent); color: var(--accent) !important; font-weight: bold; opacity: 1; }
         input, select { background: rgba(0,0,0,0.2) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: var(--text) !important; border-radius: 12px !important; padding: 10px; font-size: 0.95rem !important; }
         .btn-action { background: var(--accent); color: white; }
-        
-        /* القائمة المنسدلة */
         #themeMenu { display: none; position: absolute; left: 15px; top: 55px; z-index: 100; width: 150px; background: #1f2937; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); }
         #themeMenu button { width: 100%; text-align: right; padding: 10px 15px; font-size: 0.85rem; border-bottom: 1px solid rgba(255,255,255,0.05); color: #fff; }
-        #themeMenu button:last-child { border: none; }
-        
-        /* المظاهر الجوهرية */
         .theme-light { --main-bg: #f3f4f6; --card-bg: #ffffff; --text: #1f2937; --accent: #2563eb; }
         .theme-gold { --main-bg: #1a1610; --card-bg: #2a2419; --text: #f3e5ab; --accent: #d4af37; }
         .theme-cyber { --main-bg: #0d0221; --card-bg: #190e38; --text: #00f2ff; --accent: #ff00ff; }
@@ -35,19 +30,13 @@
     </style>
 </head>
 <body id="mainBody">
-
     <header class="p-3 bg-gray-900/40 flex items-center justify-between px-5 border-b border-gray-800 relative">
-        <!-- زر الثلاث نقاط -->
         <button onclick="toggleThemeMenu()" class="text-2xl text-gray-400">⋮</button>
-        
         <div class="flex items-center gap-2">
             <img src="logo.png" alt="Logo" class="w-8 h-8 object-contain">
             <h1 class="text-xl font-black text-blue-400">Sa3aty</h1>
         </div>
-        
-        <div class="w-6"></div> <!-- للموازنة -->
-
-        <!-- قائمة الأشكال -->
+        <div class="w-6"></div>
         <div id="themeMenu">
             <button onclick="setTheme('default')">🔵 المظهر الافتراضي</button>
             <button onclick="setTheme('light')">⚪ المظهر المضيء</button>
@@ -57,15 +46,12 @@
             <button onclick="setTheme('rose')">🔴 المظهر الوردي</button>
         </div>
     </header>
-    
     <nav class="flex justify-around bg-gray-900/60 shadow-md">
         <button onclick="showTab('empTab', this)" class="w-full active-btn">الموظفين</button>
         <button onclick="showTab('logTab', this)" class="w-full">التسجيل</button>
         <button onclick="showTab('repTab', this)" class="w-full">التقرير</button>
     </nav>
-
     <main class="flex-grow overflow-hidden flex flex-col">
-        <!-- التبويب 1: الموظفين -->
         <div id="empTab" class="tab-content active-tab">
             <div class="glass p-5 rounded-2xl">
                 <div class="flex gap-2 mb-4">
@@ -75,38 +61,24 @@
                 <ul id="empList" class="space-y-2"></ul>
             </div>
         </div>
-
-        <!-- التبويب 2: التسجيل -->
         <div id="logTab" class="tab-content">
             <div class="glass p-5 rounded-2xl space-y-4">
                 <select id="logNameSelect" class="w-full"></select>
                 <input type="date" id="logDate" class="w-full">
-                <div class="flex gap-3">
-                    <input type="time" id="logIn" class="w-full" placeholder="حضور">
-                    <input type="time" id="logOut" class="w-full" placeholder="انصراف">
-                </div>
+                <div class="flex gap-3"><input type="time" id="logIn" class="w-full"><input type="time" id="logOut" class="w-full"></div>
                 <button onclick="addLog()" class="btn-action w-full py-4 rounded-xl font-bold">حفظ البيانات</button>
             </div>
         </div>
-
-        <!-- التبويب 3: التقرير -->
         <div id="repTab" class="tab-content">
             <div class="flex gap-2 mb-3">
                 <select id="repNameSelect" onchange="renderReport()" class="w-1/2"></select>
                 <input type="month" id="repMonth" onchange="renderReport()" class="w-1/2">
             </div>
-            
             <div id="reportContainer" class="glass p-4 rounded-2xl">
                 <div class="text-center mb-4 py-3 border-b border-white/10">
-                    <p class="text-xs opacity-60">إجمالي الشهر</p>
                     <h2 id="monthTotal" class="text-4xl font-black text-blue-400">0:00 Hr</h2>
                 </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-center">
-                        <thead><tr class="opacity-60 text-xs"><th>التاريخ</th><th>حضور</th><th>انصراف</th><th>المدة</th></tr></thead>
-                        <tbody id="reportItems"></tbody>
-                    </table>
-                </div>
+                <div class="overflow-x-auto"><table class="w-full text-center"><thead><tr class="opacity-60 text-xs"><th>التاريخ</th><th>حضور</th><th>انصراف</th><th>المدة</th></tr></thead><tbody id="reportItems"></tbody></table></div>
             </div>
             <div class="grid grid-cols-3 gap-2 mt-4">
                 <button onclick="exportXLSX()" class="bg-gray-700 py-3 rounded-xl text-xs">Excel</button>
@@ -115,147 +87,30 @@
             </div>
         </div>
     </main>
-
     <script>
         let employees = JSON.parse(localStorage.getItem('employees') || '[]');
         let logs = JSON.parse(localStorage.getItem('logs') || '[]');
-
-        function toggleThemeMenu() {
-            const menu = document.getElementById('themeMenu');
-            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-        }
-
-        function setTheme(themeName) {
-            const body = document.getElementById('mainBody');
-            body.className = themeName === 'default' ? '' : 'theme-' + themeName;
-            localStorage.setItem('userTheme', themeName);
-            document.getElementById('themeMenu').style.display = 'none';
-        }
-
-        function showTab(tabId, btn) {
-            document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
-            document.querySelectorAll('nav button').forEach(b => b.classList.remove('active-btn'));
-            document.getElementById(tabId).style.display = 'block';
-            btn.classList.add('active-btn');
-            if(tabId === 'repTab') renderReport();
-        }
-
-        function addEmployee() {
-            const name = document.getElementById('newEmpName').value.trim();
-            if(!name || employees.includes(name)) return;
-            employees.push(name);
-            localStorage.setItem('employees', JSON.stringify(employees));
-            document.getElementById('newEmpName').value = '';
-            renderEmployees();
-            updateSelectors();
-        }
-
-        function renderEmployees() {
-            const list = document.getElementById('empList');
-            list.innerHTML = employees.map((e, i) => `
-                <li class="flex justify-between items-center p-3 bg-black/20 rounded-xl">
-                    <span>${e}</span>
-                    <button onclick="delEmp(${i})" class="text-red-500 text-xs">حذف</button>
-                </li>`).join('');
-        }
-
-        function delEmp(i) {
-            if(confirm('حذف الموظف؟')) {
-                employees.splice(i, 1);
-                localStorage.setItem('employees', JSON.stringify(employees));
-                renderEmployees();
-                updateSelectors();
-            }
-        }
-
-        function updateSelectors() {
-            const options = employees.map(e => `<option value="${e}">${e}</option>`).join('');
-            document.getElementById('logNameSelect').innerHTML = options;
-            document.getElementById('repNameSelect').innerHTML = options;
-        }
-
-        function addLog() {
-            const name = document.getElementById('logNameSelect').value;
-            const date = document.getElementById('logDate').value;
-            const tIn = document.getElementById('logIn').value;
-            const tOut = document.getElementById('logOut').value;
-            if(!name || !date || !tIn || !tOut) return alert('أكمل البيانات');
-            logs.push({ name, date, in: tIn, out: tOut });
-            localStorage.setItem('logs', JSON.stringify(logs));
-            alert('تم الحفظ');
-        }
-
-        function calc(s, e) {
-            const [h1, m1] = s.split(':').map(Number);
-            const [h2, m2] = e.split(':').map(Number);
-            let d = (h2*60+m2) - (h1*60+m1);
-            if (d < 0) d += 1440;
-            return d/60;
-        }
-
-        function fmt(dec) {
-            const h = Math.floor(dec);
-            const m = Math.round((dec - h) * 60);
-            return `${h}:${m.toString().padStart(2, '0')}`;
-        }
-
-        function renderReport() {
-            const name = document.getElementById('repNameSelect').value;
-            const month = document.getElementById('repMonth').value;
-            const body = document.getElementById('reportItems');
-            body.innerHTML = '';
-            let total = 0;
-            if(!name) return;
-            logs.filter(l => l.name === name && l.date.startsWith(month))
-                .sort((a,b) => new Date(a.date) - new Date(b.date))
-                .forEach(l => {
-                    const dur = calc(l.in, l.out);
-                    total += dur;
-                    body.innerHTML += `<tr class="border-b border-white/5 font-bold"><td class="py-2 text-[10px]">${l.date}</td><td>${l.in}</td><td>${l.out}</td><td class="text-blue-400">${fmt(dur)}</td></tr>`;
-                });
-            document.getElementById('monthTotal').innerText = `${fmt(total)} Hr`;
-        }
-
-        window.onload = () => {
-            document.getElementById('logDate').valueAsDate = new Date();
-            document.getElementById('repMonth').value = new Date().toISOString().slice(0, 7);
-            const savedTheme = localStorage.getItem('userTheme') || 'default';
-            setTheme(savedTheme);
-            renderEmployees();
-            updateSelectors();
-            if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
+        function toggleThemeMenu(){const m=document.getElementById('themeMenu');m.style.display=m.style.display==='block'?'none':'block';}
+        function setTheme(t){document.getElementById('mainBody').className=t==='default'?'':'theme-'+t;localStorage.setItem('userTheme',t);document.getElementById('themeMenu').style.display='none';}
+        function showTab(i,b){document.querySelectorAll('.tab-content').forEach(t=>t.style.display='none');document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active-btn'));document.getElementById(i).style.display='block';b.classList.add('active-btn');if(i==='repTab')renderReport();}
+        function addEmployee(){const n=document.getElementById('newEmpName').value.trim();if(!n||employees.includes(n))return;employees.push(n);localStorage.setItem('employees',JSON.stringify(employees));document.getElementById('newEmpName').value='';renderEmployees();updateSelectors();}
+        function renderEmployees(){document.getElementById('empList').innerHTML=employees.map((e,i)=>`<li class="flex justify-between items-center p-3 bg-black/20 rounded-xl"><span>${e}</span><button onclick="delEmp(${i})" class="text-red-500 text-xs">حذف</button></li>`).join('');}
+        function delEmp(i){if(confirm('حذف؟')){employees.splice(i,1);localStorage.setItem('employees',JSON.stringify(employees));renderEmployees();updateSelectors();}}
+        function updateSelectors(){const o=employees.map(e=>`<option value="${e}">${e}</option>`).join('');document.getElementById('logNameSelect').innerHTML=o;document.getElementById('repNameSelect').innerHTML=o;}
+        function addLog(){const n=document.getElementById('logNameSelect').value,d=document.getElementById('logDate').value,i=document.getElementById('logIn').value,o=document.getElementById('logOut').value;if(!n||!d||!i||!o)return alert('أكمل البيانات');logs.push({name:n,date:d,in:i,out:o});localStorage.setItem('logs',JSON.stringify(logs));alert('تم الحفظ');}
+        function calc(s,e){const[h1,m1]=s.split(':').map(Number),[h2,m2]=e.split(':').map(Number);let d=(h2*60+m2)-(h1*60+m1);return d<0?(d+1440)/60:d/60;}
+        function fmt(dec){const h=Math.floor(dec),m=Math.round((dec-h)*60);return `${h}:${m.toString().padStart(2,'0')}`;}
+        function renderReport(){const n=document.getElementById('repNameSelect').value,m=document.getElementById('repMonth').value,body=document.getElementById('reportItems');body.innerHTML='';let t=0;if(!n)return;logs.filter(l=>l.name===n&&l.date.startsWith(m)).sort((a,b)=>new Date(a.date)-new Date(b.date)).forEach(l=>{const d=calc(l.in,l.out);t+=d;body.innerHTML+=`<tr class="border-b border-white/5 font-bold"><td class="py-2 text-[10px]">${l.date}</td><td>${l.in}</td><td>${l.out}</td><td class="text-blue-400">${fmt(d)}</td></tr>`;});document.getElementById('monthTotal').innerText=`${fmt(t)} Hr`;}
+        window.onload=()=>{
+            document.getElementById('logDate').valueAsDate=new Date();
+            document.getElementById('repMonth').value=new Date().toISOString().slice(0, 7);
+            setTheme(localStorage.getItem('userTheme')||'default');
+            renderEmployees();updateSelectors();
+            if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=3').then(r=>{console.log('SW OK');r.update();});}
         };
-
-        // وظائف التصدير الأساسية
-        function exportXLSX() {
-            const name = document.getElementById('repNameSelect').value;
-            const month = document.getElementById('repMonth').value;
-            const data = logs.filter(l => l.name === name && l.date.startsWith(month)).map(l => ({
-                "الموظف": l.name, "التاريخ": l.date, "حضور": l.in, "انصراف": l.out, "ساعات": fmt(calc(l.in, l.out))
-            }));
-            const ws = XLSX.utils.json_to_sheet(data);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Report");
-            XLSX.writeFile(wb, `Sa3aty_${name}.xlsx`);
-        }
-        
-        function exportPNG() {
-            html2canvas(document.querySelector("#reportContainer"), { backgroundColor: getComputedStyle(document.body).getPropertyValue('--main-bg') }).then(canvas => {
-                const link = document.createElement('a');
-                link.download = 'Report.png';
-                link.href = canvas.toDataURL();
-                link.click();
-            });
-        }
-
-        function exportSmartPDF() {
-            html2canvas(document.querySelector("#reportContainer"), { backgroundColor: getComputedStyle(document.body).getPropertyValue('--main-bg') }).then(canvas => {
-                const img = canvas.toDataURL('image/png');
-                const pdf = new jspdf.jsPDF();
-                pdf.addImage(img, 'PNG', 10, 10, 190, 0);
-                pdf.save("Report.pdf");
-            });
-        }
+        function exportXLSX(){const n=document.getElementById('repNameSelect').value,m=document.getElementById('repMonth').value,d=logs.filter(l=>l.name===n&&l.date.startsWith(m)).map(l=>({"الموظف":l.name,"التاريخ":l.date,"حضور":l.in,"انصراف":l.out,"ساعات":fmt(calc(l.in,l.out))}));const ws=XLSX.utils.json_to_sheet(d),wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"Report");XLSX.writeFile(wb,`Sa3aty_${n}.xlsx`);}
+        function exportPNG(){html2canvas(document.querySelector("#reportContainer"),{backgroundColor:getComputedStyle(document.body).getPropertyValue('--main-bg'),scale:2}).then(c=>{const l=document.createElement('a');l.download='Report.png';l.href=c.toDataURL();l.click();});}
+        function exportSmartPDF(){html2canvas(document.querySelector("#reportContainer"),{backgroundColor:getComputedStyle(document.body).getPropertyValue('--main-bg'),scale:2}).then(c=>{const i=c.toDataURL('image/png'),p=new jspdf.jsPDF();p.addImage(i,'PNG',10,10,190,0);p.save("Report.pdf");});}
     </script>
 </body>
 </html>
