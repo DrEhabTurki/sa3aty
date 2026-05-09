@@ -1,12 +1,10 @@
 {
   "name": "Sa3aty - ساعاتي",
   "short_name": "Sa3aty",
-  "description": "تطبيق إدارة ساعات العمل للموظفين",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#121417",
-  "theme_color": "#3b82f6",
-  "orientation": "portrait",
+  "background_color": "#000000",
+  "theme_color": "#0a84ff",
   "icons": [
     {
       "src": "logo.png",
@@ -16,8 +14,7 @@
     {
       "src": "logo.png",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/png"
     }
   ]
 }
