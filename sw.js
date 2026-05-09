@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sa3aty-v3';
+const CACHE_NAME = 'sa3aty-apple-v5';
 const assets = [
   './',
   './index.html',
