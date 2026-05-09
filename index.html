@@ -12,94 +12,95 @@
     <style>
         body { font-family: 'Cairo', sans-serif; background-color: #121417; color: #e0e6ed; height: 100vh; overflow: hidden; display: flex; flex-direction: column; font-size: 1.1rem; }
         .glass { background: rgba(30, 32, 35, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
-        .tab-content { display: none; flex-grow: 1; overflow-y: auto; padding: 15px; }
+        .tab-content { display: none; flex-grow: 1; overflow-y: auto; padding: 12px; }
         .active-tab { display: block; }
-        .active-btn { border-bottom: 4px solid #3b82f6; color: #3b82f6; font-weight: bold; }
-        input, select { background: #1c1f24 !important; border: 1px solid #444 !important; color: #fff !important; border-radius: 14px !important; padding: 12px; font-size: 1rem !important; }
+        /* شريط التابات النحيف */
+        nav button { padding: 8px 5px !important; font-size: 0.9rem !important; transition: 0.2s; }
+        .active-btn { border-bottom: 2px solid #3b82f6; color: #3b82f6; font-weight: bold; }
+        input, select { background: #1c1f24 !important; border: 1px solid #444 !important; color: #fff !important; border-radius: 12px !important; padding: 10px; font-size: 0.95rem !important; }
         .btn-action { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
-        th { padding: 12px; border-bottom: 2px solid #333; font-size: 0.95rem; }
-        td { padding: 10px; border-bottom: 1px solid #222; font-size: 0.95rem; }
-        .report-header-print { display: none; }
+        th { padding: 10px; border-bottom: 2px solid #333; font-size: 0.85rem; }
+        td { padding: 8px; border-bottom: 1px solid #222; font-size: 0.85rem; }
     </style>
 </head>
 <body>
-    <header class="p-4 text-center bg-gray-900/30 flex flex-col items-center">
-    <img src="logo.png" alt="Sa3aty Logo" class="w-20 h-20 mb-2 object-contain">
-    <h1 class="text-3xl font-extrabold text-blue-400 tracking-wider">Sa3aty</h1>
-</header>
+    <!-- الهيدر: اللوجو بجانب الاسم -->
+    <header class="p-3 bg-gray-900/40 flex items-center justify-center gap-3 border-b border-gray-800">
+        <img src="logo.png" alt="Logo" class="w-10 h-10 object-contain">
+        <h1 class="text-2xl font-black text-blue-400 tracking-tighter">Sa3aty</h1>
+    </header>
     
-    <nav class="flex justify-around border-b border-gray-800 bg-gray-900/60 shadow-lg">
-        <button onclick="showTab('empTab', this)" class="p-4 text-lg active-btn">الموظفين</button>
-        <button onclick="showTab('logTab', this)" class="p-4 text-lg">التسجيل</button>
-        <button onclick="showTab('repTab', this)" class="p-4 text-lg">التقرير</button>
+    <!-- التابات النحيفة (30% من الحجم السابق) -->
+    <nav class="flex justify-around bg-gray-900/60 shadow-md">
+        <button onclick="showTab('empTab', this)" class="w-full active-btn">الموظفين</button>
+        <button onclick="showTab('logTab', this)" class="w-full">التسجيل</button>
+        <button onclick="showTab('repTab', this)" class="w-full">التقرير</button>
     </nav>
 
     <main class="flex-grow overflow-hidden flex flex-col">
-        <!-- الموظفين -->
+        <!-- التبويب 1: الموظفين -->
         <div id="empTab" class="tab-content active-tab">
-            <div class="glass p-6 rounded-3xl shadow-2xl">
-                <h3 class="text-center mb-6 text-gray-400 font-bold text-xl border-b border-gray-700 pb-2">قاعدة بيانات الموظفين</h3>
-                <div class="flex gap-3 mb-6">
-                    <input type="text" id="newEmpName" placeholder="أدخل اسم الموظف" class="flex-grow">
-                    <button onclick="addEmployee()" class="btn-action px-6 rounded-2xl font-bold text-3xl">+</button>
+            <div class="glass p-5 rounded-2xl">
+                <h3 class="text-center mb-4 text-gray-400 font-bold text-lg">قاعدة البيانات</h3>
+                <div class="flex gap-2 mb-4">
+                    <input type="text" id="newEmpName" placeholder="اسم الموظف" class="flex-grow">
+                    <button onclick="addEmployee()" class="btn-action px-5 rounded-xl font-bold text-2xl">+</button>
                 </div>
-                <ul id="empList" class="space-y-3"></ul>
+                <ul id="empList" class="space-y-2"></ul>
             </div>
         </div>
 
-        <!-- التسجيل -->
+        <!-- التبويب 2: التسجيل -->
         <div id="logTab" class="tab-content">
-            <div class="glass p-6 rounded-3xl space-y-5 shadow-2xl">
-                <h3 class="text-center text-gray-400 font-bold text-xl mb-2">تسجيل ساعات العمل</h3>
+            <div class="glass p-5 rounded-2xl space-y-3 shadow-xl">
                 <div>
-                    <label class="block text-sm text-gray-500 mb-2 mr-2">اختيار الموظف</label>
+                    <label class="block text-[10px] text-gray-500 mb-1 mr-1">الموظف</label>
                     <select id="logNameSelect" class="w-full"></select>
                 </div>
                 <div>
-                    <label class="block text-sm text-gray-500 mb-2 mr-2">التاريخ اليومي</label>
+                    <label class="block text-[10px] text-gray-500 mb-1 mr-1">التاريخ</label>
                     <input type="date" id="logDate" class="w-full">
                 </div>
-                <div class="flex gap-4">
+                <div class="flex gap-3">
                     <div class="w-1/2">
-                        <label class="block text-xs text-gray-500 mb-2 text-center">وقت الحضور</label>
+                        <label class="block text-[10px] text-gray-500 mb-1 text-center">حضور</label>
                         <input type="time" id="logIn" class="w-full">
                     </div>
                     <div class="w-1/2">
-                        <label class="block text-xs text-gray-500 mb-2 text-center">وقت الانصراف</label>
+                        <label class="block text-[10px] text-gray-500 mb-1 text-center">انصراف</label>
                         <input type="time" id="logOut" class="w-full">
                     </div>
                 </div>
-                <button onclick="addLog()" class="btn-action w-full py-5 rounded-2xl font-bold text-xl mt-6 shadow-lg shadow-blue-900/20">حفظ في السجل</button>
+                <button onclick="addLog()" class="btn-action w-full py-4 rounded-xl font-bold text-lg mt-3">حفظ</button>
             </div>
         </div>
 
-        <!-- التقرير -->
+        <!-- التبويب 3: التقرير -->
         <div id="repTab" class="tab-content">
-            <div class="flex gap-3 mb-5">
+            <div class="flex gap-2 mb-3">
                 <select id="repNameSelect" onchange="renderReport()" class="w-1/2 font-bold"></select>
                 <input type="month" id="repMonth" onchange="renderReport()" class="w-1/2 font-bold">
             </div>
             
-            <div id="reportContainer" class="glass p-5 rounded-3xl relative">
-                <!-- هذا الجزء يظهر فقط في التصدير -->
-                <div id="printHeader" class="text-center mb-6 border-b-2 border-blue-500 pb-4 hidden">
-                    <h1 class="text-2xl font-bold text-white mb-1">تقرير ساعات العمل - Sa3aty</h1>
-                    <p id="printInfo" class="text-blue-300 font-bold"></p>
+            <div id="reportContainer" class="glass p-4 rounded-2xl">
+                <div id="printHeader" class="text-center mb-4 border-b-2 border-blue-500 pb-2 hidden">
+                    <h1 class="text-xl font-bold text-white">Sa3aty Report</h1>
+                    <p id="printInfo" class="text-xs text-blue-300"></p>
                 </div>
 
-                <div class="text-center mb-6 bg-blue-500/10 py-4 rounded-2xl border border-blue-500/20">
-                    <p class="text-sm text-gray-400 font-bold">إجمالي ساعات العمل للشهر</p>
-                    <h2 id="monthTotal" class="text-5xl font-black text-blue-400 mt-1">0:00 Hr</h2>
+                <div class="text-center mb-4 bg-blue-500/5 py-3 rounded-xl border border-blue-500/10">
+                    <p class="text-[10px] text-gray-400 font-bold uppercase">إجمالي الساعات</p>
+                    <h2 id="monthTotal" class="text-4xl font-black text-blue-400">0:00 Hr</h2>
                 </div>
                 
                 <div class="overflow-x-auto">
                     <table class="w-full text-center" id="reportTable">
                         <thead>
                             <tr class="text-blue-300">
-                                <th>التاريخ</th>
+                                <th>تاريخ</th>
                                 <th>حضور</th>
                                 <th>انصراف</th>
-                                <th class="text-blue-100 font-bold">المدة</th>
+                                <th>مدة</th>
                             </tr>
                         </thead>
                         <tbody id="reportItems" class="text-gray-300"></tbody>
@@ -107,10 +108,10 @@
                 </div>
             </div>
             
-            <div class="grid grid-cols-3 gap-3 mt-6 pb-6">
-                <button onclick="exportXLSX()" class="bg-green-600/20 text-green-400 py-4 rounded-2xl font-bold border border-green-600/30 text-sm">Excel</button>
-                <button onclick="exportSmartPDF()" class="bg-red-600/20 text-red-400 py-4 rounded-2xl font-bold border border-red-600/30 text-sm">PDF</button>
-                <button onclick="exportPNG()" class="bg-purple-600/20 text-purple-400 py-4 rounded-2xl font-bold border border-purple-600/30 text-sm">صورة</button>
+            <div class="grid grid-cols-3 gap-2 mt-4 pb-4">
+                <button onclick="exportXLSX()" class="bg-green-600/10 text-green-400 py-3 rounded-xl font-bold border border-green-600/20 text-xs">Excel</button>
+                <button onclick="exportSmartPDF()" class="bg-red-600/10 text-red-400 py-3 rounded-xl font-bold border border-red-600/20 text-xs">PDF</button>
+                <button onclick="exportPNG()" class="bg-purple-600/10 text-purple-400 py-3 rounded-xl font-bold border border-purple-600/20 text-xs">صورة</button>
             </div>
         </div>
     </main>
@@ -140,9 +141,9 @@
         function renderEmployees() {
             const list = document.getElementById('empList');
             list.innerHTML = employees.map((e, i) => `
-                <li class="flex justify-between items-center p-4 bg-gray-800/40 rounded-2xl border border-white/5">
-                    <span class="font-bold">${e}</span>
-                    <button onclick="delEmp(${i})" class="text-red-500 bg-red-500/10 px-4 py-2 rounded-xl text-sm">حذف</button>
+                <li class="flex justify-between items-center p-3 bg-gray-800/40 rounded-xl border border-white/5">
+                    <span class="font-bold text-sm">${e}</span>
+                    <button onclick="delEmp(${i})" class="text-red-500 bg-red-500/10 px-3 py-1 rounded-lg text-xs">حذف</button>
                 </li>`).join('');
         }
 
@@ -159,8 +160,8 @@
             const logSel = document.getElementById('logNameSelect');
             const repSel = document.getElementById('repNameSelect');
             const options = employees.map(e => `<option value="${e}">${e}</option>`).join('');
-            logSel.innerHTML = options;
-            repSel.innerHTML = options;
+            if(logSel) logSel.innerHTML = options;
+            if(repSel) repSel.innerHTML = options;
         }
 
         function addLog() {
@@ -197,17 +198,17 @@
 
             if(!name) return;
 
-            logs.filter(l => l.name === name && l.date.startsWith(month))
-                .sort((a,b) => new Date(a.date) - new Date(b.date))
+            const filtered = logs.filter(l => l.name === name && l.date.startsWith(month));
+            filtered.sort((a,b) => new Date(a.date) - new Date(b.date))
                 .forEach(l => {
                     const dur = calc(l.in, l.out);
                     total += dur;
                     body.innerHTML += `
                         <tr>
-                            <td class="font-bold text-xs">${l.date}</td>
+                            <td>${l.date.split('-').slice(1).join('/')}</td>
                             <td>${l.in}</td>
                             <td>${l.out}</td>
-                            <td class="text-blue-400 font-black">${fmt(dur)}</td>
+                            <td class="text-blue-400 font-bold">${fmt(dur)}</td>
                         </tr>`;
                 });
             
@@ -215,18 +216,9 @@
             document.getElementById('printInfo').innerText = `الموظف: ${name} | الشهر: ${month}`;
         }
 
-        function prepareForPrint() {
+        function exportSmartPDF() {
             const header = document.getElementById('printHeader');
             header.style.display = 'block';
-            return header;
-        }
-
-        function finalizePrint(header) {
-            header.style.display = 'none';
-        }
-
-        function exportSmartPDF() {
-            const header = prepareForPrint();
             html2canvas(document.querySelector("#reportContainer"), { backgroundColor: '#121417', scale: 2.5 }).then(canvas => {
                 const imgData = canvas.toDataURL('image/png');
                 const { jsPDF } = window.jspdf;
@@ -235,18 +227,19 @@
                 const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
                 pdf.addImage(imgData, 'PNG', 0, 10, pdfWidth, pdfHeight);
                 pdf.save(`Sa3aty_${document.getElementById('repNameSelect').value}.pdf`);
-                finalizePrint(header);
+                header.style.display = 'none';
             });
         }
 
         function exportPNG() {
-            const header = prepareForPrint();
+            const header = document.getElementById('printHeader');
+            header.style.display = 'block';
             html2canvas(document.querySelector("#reportContainer"), { backgroundColor: '#121417', scale: 2.5 }).then(canvas => {
                 const link = document.createElement('a');
                 link.download = `Sa3aty_${document.getElementById('repNameSelect').value}.png`;
                 link.href = canvas.toDataURL();
                 link.click();
-                finalizePrint(header);
+                header.style.display = 'none';
             });
         }
 
@@ -255,13 +248,7 @@
             const month = document.getElementById('repMonth').value;
             const filtered = logs.filter(l => l.name === name && l.date.startsWith(month)).map(l => {
                 const duration = calc(l.in, l.out);
-                return {
-                    "اسم الموظف": l.name,
-                    "التاريخ": l.date,
-                    "الحضور": l.in,
-                    "الانصراف": l.out,
-                    "عدد الساعات اليومي": fmt(duration)
-                };
+                return { "الموظف": l.name, "التاريخ": l.date, "حضور": l.in, "انصراف": l.out, "ساعات": fmt(duration) };
             });
             const ws = XLSX.utils.json_to_sheet(filtered);
             const wb = XLSX.utils.book_new();
@@ -274,15 +261,10 @@
             document.getElementById('repMonth').value = new Date().toISOString().slice(0, 7);
             renderEmployees();
             updateSelectors();
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('./sw.js').then(() => console.log('SW Registered'));
+            }
         };
-        // إضافة كود تسجيل الـ Service Worker
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js')
-      .then(reg => console.log('Service Worker Registered'))
-      .catch(err => console.log('Service Worker Failed', err));
-  });
-}
     </script>
 </body>
 </html>
