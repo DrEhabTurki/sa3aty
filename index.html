@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ساعاتي الذكي - Time Keeper</title>
+    <link rel="manifest" href="manifest.json">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <style>
+        body { font-family: 'Cairo', sans-serif; background-color: #1a1c20; color: #e2e8f0; text-align: center; }
+        .glass-card { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 25px; }
+        input { background: #2d3139; border: 1px solid #3f444d; color: white; border-radius: 12px; padding: 10px; text-align: center; outline: none; }
+        input:focus { border-color: #60a5fa; }
+        .btn-modern { background: linear-gradient(135deg, #3b82f6, #2563eb); transition: 0.3s; border-radius: 15px; }
+        .btn-modern:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(37, 99, 235, 0.4); }
+        th { color: #93c5fd; padding: 15px; border-bottom: 1px solid #3f444d; }
+        td { padding: 12px; border-bottom: 1px solid #2d3139; }
+    </style>
+</head>
+<body class="p-4 md:p-10">
+    <div class="max-w-5xl mx-auto">
+        <h1 class="text-4xl font-bold mb-8 text-blue-400">تايم كيبر الذكي</h1>
+
+        <div class="glass-card p-8 mb-10 shadow-2xl">
+            <h2 class="text-xl mb-6 font-light">تسجيل جديد</h2>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                <div class="flex flex-col">
+                    <label class="text-xs mb-2 text-gray-400">اسم الموظف</label>
+                    <input type="text" id="empName" placeholder="الاسم">
+                </div>
+                <div class="flex flex-col">
+                    <label class="text-xs mb-2 text-gray-400">التاريخ</label>
+                    <input type="date" id="workDate">
+                </div>
+                <div class="flex flex-col">
+                    <label class="text-xs mb-2 text-gray-400">حضور - انصراف</label>
+                    <div class="flex gap-2">
+                        <input type="time" id="tIn" class="w-full">
+                        <input type="time" id="tOut" class="w-full">
+                    </div>
+                </div>
+                <button onclick="addEntry()" class="btn-modern py-3 font-bold">إضافة السجل</button>
+            </div>
+        </div>
+
+        <div id="reportArea" class="glass-card p-6 mb-8 overflow-hidden">
+            <h2 class="text-2xl mb-6">التقرير الشهري التفصيلي</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full" id="reportTable">
+                    <thead>
+                        <tr>
+                            <th>الموظف</th>
+                            <th>التاريخ</th>
+                            <th>حضور</th>
+                            <th>انصراف</th>
+                            <th>المدة</th>
+                            <th>حذف</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+            <div class="mt-8 p-6 bg-gray-900/50 rounded-2xl border border-blue-500/30">
+                <p class="text-gray-400 text-sm">إجمالي ساعات العمل</p>
+                <div id="grandTotal" class="text-5xl font-bold text-blue-400 mt-2">0:00 Hr</div>
+            </div>
+        </div>
+
+        <div class="flex flex-wrap justify-center gap-4">
+            <button onclick="exportXLSX()" class="bg-green-600/20 text-green-400 border border-green-600/50 px-6 py-2 rounded-xl hover:bg-green-600 hover:text-white transition">Excel</button>
+            <button onclick="exportPDF()" class="bg-red-600/20 text-red-400 border border-red-600/50 px-6 py-2 rounded-xl hover:bg-red-600 hover:text-white transition">PDF</button>
+            <button onclick="exportPNG()" class="bg-purple-600/20 text-purple-400 border border-purple-600/50 px-6 py-2 rounded-xl hover:bg-purple-600 hover:text-white transition">حفظ كصورة</button>
+        </div>
+    </div>
+
+    <script>
+        let data = JSON.parse(localStorage.getItem('logs') || '[]');
+
+        function calc(start, end) {
+            const [h1, m1] = start.split(':').map(Number);
+            const [h2, m2] = end.split(':').map(Number);
+            let diff = (h2 * 60 + m2) - (h1 * 60 + m1);
+            if (diff < 0) diff += 1440; 
+            return diff / 60;
+        }
+
+        function formatTime(decimal) {
+            const h = Math.floor(decimal);
+            const m = Math.round((decimal - h) * 60);
+            return `${h}:${m.toString().padStart(2, '0')} Hr`;
+        }
+
+        function render() {
+            const body = document.getElementById('tableBody');
+            body.innerHTML = '';
+            let total = 0;
+            data.forEach((item, i) => {
+                const duration = calc(item.in, item.out);
+                total += duration;
+                body.innerHTML += `
+                    <tr>
+                        <td><input type="text" value="${item.name}" onchange="update(${i},'name',this.value)" class="w-32 bg-transparent border-none"></td>
+                        <td><input type="date" value="${item.date}" onchange="update(${i},'date',this.value)" class="bg-transparent border-none"></td>
+                        <td><input type="time" value="${item.in}" onchange="update(${i},'in',this.value)" class="bg-transparent border-none"></td>
+                        <td><input type="time" value="${item.out}" onchange="update(${i},'out',this.value)" class="bg-transparent border-none"></td>
+                        <td class="font-bold text-blue-300">${formatTime(duration)}</td>
+                        <td><button onclick="del(${i})" class="text-red-500">✕</button></td>
+                    </tr>`;
+            });
+            document.getElementById('grandTotal').innerText = formatTime(total);
+            localStorage.setItem('logs', JSON.stringify(data));
+        }
+
+        function addEntry() {
+            const name = document.getElementById('empName').value;
+            const date = document.getElementById('workDate').value;
+            const tIn = document.getElementById('tIn').value;
+            const tOut = document.getElementById('tOut').value;
+            if(!name || !date || !tIn || !tOut) return alert('أكمل البيانات');
+            data.push({name, date, in: tIn, out: tOut});
+            render();
+        }
+
+        function update(i, k, v) { data[i][k] = v; render(); }
+        function del(i) { data.splice(i, 1); render(); }
+
+        function exportXLSX() {
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Report");
+            XLSX.writeFile(wb, "TimeReport.xlsx");
+        }
+
+        function exportPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.autoTable({ html: '#reportTable', theme: 'grid' });
+            doc.save('Report.pdf');
+        }
+
+        function exportPNG() {
+            html2canvas(document.querySelector("#reportArea"), {backgroundColor: '#1a1c20'}).then(canvas => {
+                const link = document.createElement('a');
+                link.download = 'Report.png';
+                link.href = canvas.toDataURL();
+                link.click();
+            });
+        }
+        render();
+    </script>
+</body>
+</html>
