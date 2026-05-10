@@ -32,10 +32,8 @@
             color: var(--text) !important; border-radius: 12px !important; 
             padding: 0 15px; font-size: 0.9rem !important; text-align: center; font-weight: 600;
         }
-        .btn-premium { background: var(--btn-bg); color: var(--btn-text); border-radius: 16px; font-weight: 700; transition: 0.2s; }
-        
-        /* اللوجو بدون أي مؤثرات */
-        .logo-img { width: 45px; height: 45px; object-fit: contain; mix-blend-mode: normal !important; filter: none !important; } 
+        .btn-premium { background: var(--btn-bg); color: var(--btn-text); border-radius: 16px; font-weight: 700; transition: 0.2s; cursor: pointer; }
+        .logo-img { width: 45px; height: 45px; object-fit: contain; } 
 
         .tab-content { display: none; flex-grow: 1; overflow-y: auto; padding: 20px; }
         .active-tab { display: block; animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
@@ -50,8 +48,7 @@
         #themeMenu { display: none; position: absolute; left: 20px; top: 65px; z-index: 100; width: 200px; background: var(--card-bg); backdrop-filter: blur(30px); border-radius: 20px; border: 1px solid var(--border); overflow: hidden; }
         #themeMenu button { width: 100%; text-align: right; padding: 15px 20px; font-size: 0.95rem; border-bottom: 1px solid var(--border); color: var(--text); }
         
-        .export-mini-btn { padding: 8px 12px; border-radius: 10px; font-size: 10px; font-weight: 800; text-transform: uppercase; transition: 0.2s; }
-        .export-mini-btn:active { transform: scale(0.9); }
+        .export-mini-btn { padding: 8px 12px; border-radius: 10px; font-size: 10px; font-weight: 800; text-transform: uppercase; cursor: pointer; }
     </style>
 </head>
 <body id="mainBody" class="theme-dark">
@@ -114,7 +111,7 @@
                 </div>
             </div>
             
-            <div id="reportContainer" class="glass p-6 text-center mb-6 border-none">
+            <div id="reportContainer" class="glass p-6 text-center mb-6">
                 <div class="mb-6">
                     <p class="text-[9px] opacity-40 font-bold uppercase tracking-widest">Total Hours</p>
                     <h2 id="monthTotal" class="text-5xl font-light tracking-tighter">0:00</h2>
@@ -142,18 +139,64 @@
 
         function toggleThemeMenu(){const m=document.getElementById('themeMenu');m.style.display=m.style.display==='block'?'none':'block';}
         function setTheme(t){document.getElementById('mainBody').className='theme-'+t;localStorage.setItem('userTheme',t);document.getElementById('themeMenu').style.display='none';}
-        function showTab(i,b){document.querySelectorAll('.tab-content').forEach(t=>t.style.display='none');document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active-btn'));document.getElementById(i).style.display='block';b.classList.add('active-btn');if(i==='repTab')renderReport();}
         
-        function addEmployee(){const n=document.getElementById('newEmpName').value.trim();if(!n||employees.includes(n))return;employees.push(n);localStorage.setItem('employees',JSON.stringify(employees));renderEmployees();updateSelectors();document.getElementById('newEmpName').value='';}
-        function renderEmployees(){document.getElementById('empList').innerHTML=employees.map((e,i)=>`<li class="flex justify-between items-center p-4 glass"><span>${e}</span><button onclick="delEmp(${i})" class="text-red-500 font-bold">حذف</button></li>`).join('');}
-        function delEmp(i){if(confirm('حذف الموظف؟')){employees.splice(i,1);localStorage.setItem('employees',JSON.stringify(employees));renderEmployees();updateSelectors();}}
-        function updateSelectors(){const o=employees.map(e=>`<option value="${e}">${e}</option>`).join('');document.getElementById('logNameSelect').innerHTML=o;document.getElementById('repNameSelect').innerHTML=o;}
+        function showTab(i,b){
+            document.querySelectorAll('.tab-content').forEach(t=>t.style.display='none');
+            document.querySelectorAll('nav button').forEach(btn=>btn.classList.remove('active-btn'));
+            document.getElementById(i).style.display='block';
+            b.classList.add('active-btn');
+            if(i==='repTab') renderReport();
+        }
         
-        function addLog(){const n=document.getElementById('logNameSelect').value,d=document.getElementById('logDate').value,i=document.getElementById('logIn').value,o=document.getElementById('logOut').value;if(!n||!d||!i||!o)return alert('اكمل البيانات');logs.push({id:Date.now(),name:n,date:d,in:i,out:o});localStorage.setItem('logs',JSON.stringify(logs));alert('تم الحفظ');}
-        function calc(s,e){const[h1,m1]=s.split(':').map(Number),[h2,m2]=e.split(':').map(Number);let d=(h2*60+m2)-(h1*60+m1);return d<0?(d+1440)/60:d/60;}
-        function fmt(dec){const h=Math.floor(dec),m=Math.round((dec-h)*60);return `${h}:${m.toString().padStart(2,'0')}`;}
+        function addEmployee(){
+            const n=document.getElementById('newEmpName').value.trim();
+            if(!n||employees.includes(n))return;
+            employees.push(n);
+            localStorage.setItem('employees',JSON.stringify(employees));
+            renderEmployees(); updateSelectors();
+            document.getElementById('newEmpName').value='';
+        }
+
+        function renderEmployees(){
+            document.getElementById('empList').innerHTML=employees.map((e,i)=>`<li class="flex justify-between items-center p-4 glass"><span>${e}</span><button onclick="delEmp(${i})" class="text-red-500 font-bold">حذف</button></li>`).join('');
+        }
+
+        function delEmp(i){
+            if(confirm('حذف الموظف؟')){
+                employees.splice(i,1);
+                localStorage.setItem('employees',JSON.stringify(employees));
+                renderEmployees(); updateSelectors();
+            }
+        }
+
+        function updateSelectors(){
+            const o=employees.map(e=>`<option value="${e}">${e}</option>`).join('');
+            document.getElementById('logNameSelect').innerHTML=o;
+            document.getElementById('repNameSelect').innerHTML=o;
+        }
         
-        // دالة جلب اسم اليوم
+        function addLog(){
+            const n=document.getElementById('logNameSelect').value,
+                  d=document.getElementById('logDate').value,
+                  i=document.getElementById('logIn').value,
+                  o=document.getElementById('logOut').value;
+            if(!n||!d||!i||!o) return alert('اكمل البيانات');
+            logs.push({id:Date.now(),name:n,date:d,in:i,out:o});
+            localStorage.setItem('logs',JSON.stringify(logs));
+            alert('تم الحفظ');
+        }
+
+        function calc(s,e){
+            const[h1,m1]=s.split(':').map(Number),[h2,m2]=e.split(':').map(Number);
+            let d=(h2*60+m2)-(h1*60+m1);
+            return d<0?(d+1440)/60:d/60;
+        }
+
+        function fmt(dec){
+            const h=Math.floor(dec),m=Math.round((dec-h)*60);
+            return `${h}:${m.toString().padStart(2,'0')}`;
+        }
+        
         function getDayName(dateStr) {
             return new Date(dateStr).toLocaleDateString('en-US', { weekday: 'short' });
         }
@@ -170,11 +213,13 @@
         }
 
         function renderReport(){
-            const n=document.getElementById('repNameSelect').value,m=document.getElementById('repMonth').value,body=document.getElementById('reportItems');
-            body.innerHTML='';let t=0;if(!n) return;
+            const n=document.getElementById('repNameSelect').value,
+                  m=document.getElementById('repMonth').value,
+                  body=document.getElementById('reportItems');
+            body.innerHTML=''; let totalTime=0; if(!n) return;
             const filtered = logs.filter(l=>l.name===n&&l.date.startsWith(m)).sort((a,b)=>new Date(a.date)-new Date(b.date));
             filtered.forEach(l=>{
-                const d=calc(l.in,l.out);t+=d;
+                const d=calc(l.in,l.out); totalTime+=d;
                 body.innerHTML+=`<tr class="border-b var(--border)">
                     <td class="py-4 text-[10px] opacity-60">${getDayName(l.date)} ${l.date}</td>
                     <td><span class="editable-time" onclick="editLogTime(${l.id}, 'in')">${l.in}</span></td>
@@ -182,7 +227,7 @@
                     <td class="text-blue-500">${fmt(d)}</td>
                 </tr>`;
             });
-            document.getElementById('monthTotal').innerText=`${fmt(t)}`;
+            document.getElementById('monthTotal').innerText=fmt(totalTime);
         }
 
         function exportGridPDF() {
@@ -214,14 +259,21 @@
             });
         }
 
-        function exportXLSX(){const n=document.getElementById('repNameSelect').value,m=document.getElementById('repMonth').value,d=logs.filter(l=>l.name===n&&l.date.startsWith(m)).sort((a,b)=>new Date(a.date)-new Date(b.date)).map(l=>({"اليوم":getDayName(l.date),"التاريخ":l.date,"حضور":l.in,"انصراف":l.out,"ساعات":fmt(calc(l.in,l.out))}));const ws=XLSX.utils.json_to_sheet(d),wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"Report");XLSX.writeFile(wb,`Sa3aty_${n}.xlsx`);}
+        function exportXLSX(){
+            const n=document.getElementById('repNameSelect').value,
+                  m=document.getElementById('repMonth').value,
+                  d=logs.filter(l=>l.name===n&&l.date.startsWith(m)).sort((a,b)=>new Date(a.date)-new Date(b.date)).map(l=>({"اليوم":getDayName(l.date),"التاريخ":l.date,"حضور":l.in,"انصراف":l.out,"ساعات":fmt(calc(l.in,l.out))}));
+            const ws=XLSX.utils.json_to_sheet(d),wb=XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb,ws,"Report");
+            XLSX.writeFile(wb,`Sa3aty_${n}.xlsx`);
+        }
 
         window.onload = () => {
             document.getElementById('logDate').valueAsDate = new Date();
             document.getElementById('repMonth').value = new Date().toISOString().slice(0, 7);
             setTheme(localStorage.getItem('userTheme') || 'dark');
             renderEmployees(); updateSelectors();
-            if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js?v=11');
+            if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js?v=12');
         };
     </script>
 </body>
