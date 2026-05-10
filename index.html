@@ -73,4 +73,156 @@
         </div>
     </header>
     
-    <nav class="flex justify
+    <nav class="flex justify-around py-2 border-b var(--border)">
+        <button onclick="showTab('empTab', this)" class="w-full active-btn">الموظفين</button>
+        <button onclick="showTab('logTab', this)" class="w-full">التسجيل</button>
+        <button onclick="showTab('repTab', this)" class="w-full">التقرير</button>
+    </nav>
+
+    <main class="flex-grow overflow-hidden">
+        <div id="empTab" class="tab-content active-tab">
+            <div class="max-w-sm mx-auto space-y-6 text-center">
+                <input type="text" id="newEmpName" placeholder="اسم الموظف">
+                <button onclick="addEmployee()" class="btn-premium w-full py-4">إضافة موظف جديد</button>
+                <ul id="empList" class="space-y-4 mt-8"></ul>
+            </div>
+        </div>
+
+        <div id="logTab" class="tab-content">
+            <div class="glass p-8 max-w-sm mx-auto space-y-6 text-center">
+                <select id="logNameSelect"></select>
+                <input type="date" id="logDate">
+                <div class="flex gap-4 justify-center">
+                    <input type="time" id="logIn" class="!w-24">
+                    <input type="time" id="logOut" class="!w-24">
+                </div>
+                <button onclick="addLog()" class="btn-premium w-full py-4 mx-auto">حفظ الساعات</button>
+            </div>
+        </div>
+
+        <div id="repTab" class="tab-content">
+            <div class="flex flex-wrap justify-center gap-2 mb-4">
+                <button onclick="exportXLSX()" class="export-mini-btn bg-gray-500/10">Excel</button>
+                <button onclick="exportGridPDF()" class="export-mini-btn bg-red-500/10 text-red-500">PDF Report</button>
+                <button onclick="exportOldPNG()" class="export-mini-btn bg-blue-500/10 text-blue-500">Image</button>
+            </div>
+
+            <div class="flex flex-col gap-3 mb-6 items-center text-center">
+                <div class="flex gap-2 w-full justify-center">
+                    <select id="repNameSelect" onchange="renderReport()" class="!w-40"></select>
+                    <input type="month" id="repMonth" onchange="renderReport()" class="!w-40">
+                </div>
+            </div>
+            
+            <div id="reportContainer" class="glass p-6 text-center mb-6 border-none">
+                <div class="mb-6">
+                    <p class="text-[9px] opacity-40 font-bold uppercase tracking-widest">Total Hours</p>
+                    <h2 id="monthTotal" class="text-5xl font-light tracking-tighter">0:00</h2>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="opacity-30 border-b var(--border) text-[10px]">
+                            <tr>
+                                <th class="pb-3">اليوم / التاريخ</th>
+                                <th class="pb-3">حضور</th>
+                                <th class="pb-3">انصراف</th>
+                                <th class="pb-3">المدة</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reportItems" class="font-semibold"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let employees = JSON.parse(localStorage.getItem('employees') || '[]');
+        let logs = JSON.parse(localStorage.getItem('logs') || '[]');
+
+        function toggleThemeMenu(){const m=document.getElementById('themeMenu');m.style.display=m.style.display==='block'?'none':'block';}
+        function setTheme(t){document.getElementById('mainBody').className='theme-'+t;localStorage.setItem('userTheme',t);document.getElementById('themeMenu').style.display='none';}
+        function showTab(i,b){document.querySelectorAll('.tab-content').forEach(t=>t.style.display='none');document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active-btn'));document.getElementById(i).style.display='block';b.classList.add('active-btn');if(i==='repTab')renderReport();}
+        
+        function addEmployee(){const n=document.getElementById('newEmpName').value.trim();if(!n||employees.includes(n))return;employees.push(n);localStorage.setItem('employees',JSON.stringify(employees));renderEmployees();updateSelectors();document.getElementById('newEmpName').value='';}
+        function renderEmployees(){document.getElementById('empList').innerHTML=employees.map((e,i)=>`<li class="flex justify-between items-center p-4 glass"><span>${e}</span><button onclick="delEmp(${i})" class="text-red-500 font-bold">حذف</button></li>`).join('');}
+        function delEmp(i){if(confirm('حذف الموظف؟')){employees.splice(i,1);localStorage.setItem('employees',JSON.stringify(employees));renderEmployees();updateSelectors();}}
+        function updateSelectors(){const o=employees.map(e=>`<option value="${e}">${e}</option>`).join('');document.getElementById('logNameSelect').innerHTML=o;document.getElementById('repNameSelect').innerHTML=o;}
+        
+        function addLog(){const n=document.getElementById('logNameSelect').value,d=document.getElementById('logDate').value,i=document.getElementById('logIn').value,o=document.getElementById('logOut').value;if(!n||!d||!i||!o)return alert('اكمل البيانات');logs.push({id:Date.now(),name:n,date:d,in:i,out:o});localStorage.setItem('logs',JSON.stringify(logs));alert('تم الحفظ');}
+        function calc(s,e){const[h1,m1]=s.split(':').map(Number),[h2,m2]=e.split(':').map(Number);let d=(h2*60+m2)-(h1*60+m1);return d<0?(d+1440)/60:d/60;}
+        function fmt(dec){const h=Math.floor(dec),m=Math.round((dec-h)*60);return `${h}:${m.toString().padStart(2,'0')}`;}
+        
+        // دالة جلب اسم اليوم
+        function getDayName(dateStr) {
+            return new Date(dateStr).toLocaleDateString('en-US', { weekday: 'short' });
+        }
+
+        function editLogTime(id, field) {
+            const logIndex = logs.findIndex(l => l.id == id);
+            if(logIndex === -1) return;
+            const newTime = prompt(`تعديل وقت ${field === 'in' ? 'الحضور' : 'الانصراف'}:`, logs[logIndex][field]);
+            if(newTime && /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(newTime)) {
+                logs[logIndex][field] = newTime;
+                localStorage.setItem('logs', JSON.stringify(logs));
+                renderReport();
+            }
+        }
+
+        function renderReport(){
+            const n=document.getElementById('repNameSelect').value,m=document.getElementById('repMonth').value,body=document.getElementById('reportItems');
+            body.innerHTML='';let t=0;if(!n) return;
+            const filtered = logs.filter(l=>l.name===n&&l.date.startsWith(m)).sort((a,b)=>new Date(a.date)-new Date(b.date));
+            filtered.forEach(l=>{
+                const d=calc(l.in,l.out);t+=d;
+                body.innerHTML+=`<tr class="border-b var(--border)">
+                    <td class="py-4 text-[10px] opacity-60">${getDayName(l.date)} ${l.date}</td>
+                    <td><span class="editable-time" onclick="editLogTime(${l.id}, 'in')">${l.in}</span></td>
+                    <td><span class="editable-time" onclick="editLogTime(${l.id}, 'out')">${l.out}</span></td>
+                    <td class="text-blue-500">${fmt(d)}</td>
+                </tr>`;
+            });
+            document.getElementById('monthTotal').innerText=`${fmt(t)}`;
+        }
+
+        function exportGridPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const name = document.getElementById('repNameSelect').value;
+            const month = document.getElementById('repMonth').value;
+            const total = document.getElementById('monthTotal').innerText;
+            doc.setFontSize(20); doc.text("Sa3aty Work Report", 105, 20, { align: 'center' });
+            doc.setFontSize(12); doc.text(`Employee: ${name}`, 20, 35);
+            doc.text(`Month: ${month}`, 20, 42); doc.text(`Total Duration: ${total} Hr`, 20, 49);
+            let y = 65;
+            doc.setFillColor(240, 240, 240); doc.rect(20, y-7, 170, 10, 'F');
+            doc.text("Day / Date", 25, y); doc.text("In", 85, y); doc.text("Out", 125, y); doc.text("Duration", 165, y);
+            y += 10;
+            logs.filter(l=>l.name===name&&l.date.startsWith(month)).sort((a,b)=>new Date(a.date)-new Date(b.date)).forEach(l=>{
+                doc.text(`${getDayName(l.date)} ${l.date}`, 25, y); doc.text(l.in, 85, y); doc.text(l.out, 125, y); doc.text(fmt(calc(l.in,l.out)), 165, y);
+                doc.line(20, y+2, 190, y+2); y += 10;
+                if(y > 270) { doc.addPage(); y = 20; }
+            });
+            doc.save(`${name}_Report.pdf`);
+        }
+
+        function exportOldPNG() {
+            const container = document.querySelector("#reportContainer");
+            html2canvas(container, { backgroundColor: getComputedStyle(document.body).backgroundColor, scale: 2 }).then(canvas => {
+                const l = document.createElement('a');
+                l.download = 'Report.png'; l.href = canvas.toDataURL(); l.click();
+            });
+        }
+
+        function exportXLSX(){const n=document.getElementById('repNameSelect').value,m=document.getElementById('repMonth').value,d=logs.filter(l=>l.name===n&&l.date.startsWith(m)).sort((a,b)=>new Date(a.date)-new Date(b.date)).map(l=>({"اليوم":getDayName(l.date),"التاريخ":l.date,"حضور":l.in,"انصراف":l.out,"ساعات":fmt(calc(l.in,l.out))}));const ws=XLSX.utils.json_to_sheet(d),wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"Report");XLSX.writeFile(wb,`Sa3aty_${n}.xlsx`);}
+
+        window.onload = () => {
+            document.getElementById('logDate').valueAsDate = new Date();
+            document.getElementById('repMonth').value = new Date().toISOString().slice(0, 7);
+            setTheme(localStorage.getItem('userTheme') || 'dark');
+            renderEmployees(); updateSelectors();
+            if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js?v=11');
+        };
+    </script>
+</body>
+</html>
