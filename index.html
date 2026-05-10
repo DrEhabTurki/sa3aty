@@ -37,21 +37,30 @@
 
         .tab-content { display: none; flex-grow: 1; overflow-y: auto; padding: 20px; }
         .active-tab { display: block; animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
         nav button { font-weight: 700; font-size: 0.9rem; color: var(--text); opacity: 0.3; transition: 0.3s; position: relative; }
         .active-btn { opacity: 1; color: var(--accent) !important; }
         .active-btn::after { content: ''; position: absolute; bottom: 0; left: 35%; width: 30%; height: 4px; background: var(--accent); border-radius: 10px; }
 
-        .editable-time { cursor: pointer; border-bottom: 1px dashed var(--accent); padding: 2px 5px; }
+        .editable-item { cursor: pointer; border-bottom: 1px dashed var(--accent); padding: 2px 5px; }
 
-        #themeMenu { display: none; position: absolute; left: 20px; top: 65px; z-index: 100; width: 200px; background: var(--card-bg); backdrop-filter: blur(30px); border-radius: 20px; border: 1px solid var(--border); overflow: hidden; }
-        #themeMenu button { width: 100%; text-align: right; padding: 15px 20px; font-size: 0.95rem; border-bottom: 1px solid var(--border); color: var(--text); }
-        
+        /* Modal Styles */
+        #editModal { display: none; position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); align-items: center; justify-content: center; }
+        .modal-box { width: 90%; max-width: 320px; padding: 25px; border-radius: 30px; text-align: center; }
+
         .export-mini-btn { padding: 8px 12px; border-radius: 10px; font-size: 10px; font-weight: 800; text-transform: uppercase; cursor: pointer; }
     </style>
 </head>
 <body id="mainBody" class="theme-dark">
+
+    <div id="editModal" onclick="closeModal(event)">
+        <div class="glass modal-box" onclick="event.stopPropagation()">
+            <h3 class="mb-4 font-bold opacity-70" id="modalTitle">تعديل البيانات</h3>
+            <input type="date" id="editInputDate" class="mb-4 hidden">
+            <input type="time" id="editInputTime" class="mb-4 hidden">
+            <button onclick="saveEdit()" class="btn-premium w-full py-3">تحديث</button>
+        </div>
+    </div>
 
     <header class="p-4 flex items-center justify-between px-6 border-b var(--border) relative">
         <button onclick="toggleThemeMenu()" class="text-3xl opacity-60">⋮</button>
@@ -60,7 +69,7 @@
             <h1 class="text-xl font-black tracking-tighter">Sa3aty</h1>
         </div>
         <div class="w-8"></div>
-        <div id="themeMenu">
+        <div id="themeMenu" style="display:none;">
             <button onclick="setTheme('dark')">🔘 Dark Mode</button>
             <button onclick="setTheme('default')">⚪ Light Mode</button>
             <button onclick="setTheme('gold')">📀 Gold Luxury</button>
@@ -111,7 +120,7 @@
                 </div>
             </div>
             
-            <div id="reportContainer" class="glass p-6 text-center mb-6">
+            <div id="reportContainer" class="glass p-6 text-center mb-6 border-none">
                 <div class="mb-6">
                     <p class="text-[9px] opacity-40 font-bold uppercase tracking-widest">Total Hours</p>
                     <h2 id="monthTotal" class="text-5xl font-light tracking-tighter">0:00</h2>
@@ -120,7 +129,7 @@
                     <table class="w-full text-sm">
                         <thead class="opacity-30 border-b var(--border) text-[10px]">
                             <tr>
-                                <th class="pb-3">اليوم / التاريخ</th>
+                                <th class="pb-3 text-right">التاريخ / اليوم</th>
                                 <th class="pb-3">حضور</th>
                                 <th class="pb-3">انصراف</th>
                                 <th class="pb-3">المدة</th>
@@ -136,94 +145,54 @@
     <script>
         let employees = JSON.parse(localStorage.getItem('employees') || '[]');
         let logs = JSON.parse(localStorage.getItem('logs') || '[]');
+        let currentEditId = null, currentEditField = null;
 
         function toggleThemeMenu(){const m=document.getElementById('themeMenu');m.style.display=m.style.display==='block'?'none':'block';}
         function setTheme(t){document.getElementById('mainBody').className='theme-'+t;localStorage.setItem('userTheme',t);document.getElementById('themeMenu').style.display='none';}
+        function showTab(i,b){document.querySelectorAll('.tab-content').forEach(t=>t.style.display='none');document.querySelectorAll('nav button').forEach(btn=>btn.classList.remove('active-btn'));document.getElementById(i).style.display='block';b.classList.add('active-btn');if(i==='repTab') renderReport();}
         
-        function showTab(i,b){
-            document.querySelectorAll('.tab-content').forEach(t=>t.style.display='none');
-            document.querySelectorAll('nav button').forEach(btn=>btn.classList.remove('active-btn'));
-            document.getElementById(i).style.display='block';
-            b.classList.add('active-btn');
-            if(i==='repTab') renderReport();
+        function addEmployee(){const n=document.getElementById('newEmpName').value.trim();if(!n||employees.includes(n))return;employees.push(n);localStorage.setItem('employees',JSON.stringify(employees));renderEmployees(); updateSelectors();document.getElementById('newEmpName').value='';}
+        function renderEmployees(){document.getElementById('empList').innerHTML=employees.map((e,i)=>`<li class="flex justify-between items-center p-4 glass"><span>${e}</span><button onclick="delEmp(${i})" class="text-red-500 font-bold">حذف</button></li>`).join('');}
+        function delEmp(i){if(confirm('حذف الموظف؟')){employees.splice(i,1);localStorage.setItem('employees',JSON.stringify(employees));renderEmployees(); updateSelectors();}}
+        function updateSelectors(){const o=employees.map(e=>`<option value="${e}">${e}</option>`).join('');document.getElementById('logNameSelect').innerHTML=o;document.getElementById('repNameSelect').innerHTML=o;}
+        function addLog(){const n=document.getElementById('logNameSelect').value,d=document.getElementById('logDate').value,i=document.getElementById('logIn').value,o=document.getElementById('logOut').value;if(!n||!d||!i||!o) return alert('اكمل البيانات');logs.push({id:Date.now(),name:n,date:d,in:i,out:o});localStorage.setItem('logs',JSON.stringify(logs));alert('تم الحفظ');}
+
+        function calc(s,e){const[h1,m1]=s.split(':').map(Number),[h2,m2]=e.split(':').map(Number);let d=(h2*60+m2)-(h1*60+m1);return d<0?(d+1440)/60:d/60;}
+        function fmt(dec){const h=Math.floor(dec),m=Math.round((dec-h)*60);return `${h}:${m.toString().padStart(2,'0')}`;}
+        function getDayName(dateStr) {return new Date(dateStr).toLocaleDateString('en-US', { weekday: 'short' });}
+
+        // التحكم في المودال (Picker)
+        function openEditModal(id, field, val) {
+            currentEditId = id; currentEditField = field;
+            document.getElementById('editModal').style.display = 'flex';
+            const di = document.getElementById('editInputDate'), ti = document.getElementById('editInputTime');
+            di.classList.add('hidden'); ti.classList.add('hidden');
+            if(field === 'date') { di.classList.remove('hidden'); di.value = val; document.getElementById('modalTitle').innerText = 'تعديل التاريخ'; }
+            else { ti.classList.remove('hidden'); ti.value = val; document.getElementById('modalTitle').innerText = field === 'in' ? 'وقت الحضور' : 'وقت الانصراف'; }
         }
+
+        function closeModal(e) { document.getElementById('editModal').style.display = 'none'; }
         
-        function addEmployee(){
-            const n=document.getElementById('newEmpName').value.trim();
-            if(!n||employees.includes(n))return;
-            employees.push(n);
-            localStorage.setItem('employees',JSON.stringify(employees));
-            renderEmployees(); updateSelectors();
-            document.getElementById('newEmpName').value='';
-        }
-
-        function renderEmployees(){
-            document.getElementById('empList').innerHTML=employees.map((e,i)=>`<li class="flex justify-between items-center p-4 glass"><span>${e}</span><button onclick="delEmp(${i})" class="text-red-500 font-bold">حذف</button></li>`).join('');
-        }
-
-        function delEmp(i){
-            if(confirm('حذف الموظف؟')){
-                employees.splice(i,1);
-                localStorage.setItem('employees',JSON.stringify(employees));
-                renderEmployees(); updateSelectors();
-            }
-        }
-
-        function updateSelectors(){
-            const o=employees.map(e=>`<option value="${e}">${e}</option>`).join('');
-            document.getElementById('logNameSelect').innerHTML=o;
-            document.getElementById('repNameSelect').innerHTML=o;
-        }
-        
-        function addLog(){
-            const n=document.getElementById('logNameSelect').value,
-                  d=document.getElementById('logDate').value,
-                  i=document.getElementById('logIn').value,
-                  o=document.getElementById('logOut').value;
-            if(!n||!d||!i||!o) return alert('اكمل البيانات');
-            logs.push({id:Date.now(),name:n,date:d,in:i,out:o});
-            localStorage.setItem('logs',JSON.stringify(logs));
-            alert('تم الحفظ');
-        }
-
-        function calc(s,e){
-            const[h1,m1]=s.split(':').map(Number),[h2,m2]=e.split(':').map(Number);
-            let d=(h2*60+m2)-(h1*60+m1);
-            return d<0?(d+1440)/60:d/60;
-        }
-
-        function fmt(dec){
-            const h=Math.floor(dec),m=Math.round((dec-h)*60);
-            return `${h}:${m.toString().padStart(2,'0')}`;
-        }
-        
-        function getDayName(dateStr) {
-            return new Date(dateStr).toLocaleDateString('en-US', { weekday: 'short' });
-        }
-
-        function editLogTime(id, field) {
-            const logIndex = logs.findIndex(l => l.id == id);
-            if(logIndex === -1) return;
-            const newTime = prompt(`تعديل وقت ${field === 'in' ? 'الحضور' : 'الانصراف'}:`, logs[logIndex][field]);
-            if(newTime && /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(newTime)) {
-                logs[logIndex][field] = newTime;
+        function saveEdit() {
+            const logIdx = logs.findIndex(l => l.id == currentEditId);
+            const val = currentEditField === 'date' ? document.getElementById('editInputDate').value : document.getElementById('editInputTime').value;
+            if(val) {
+                logs[logIdx][currentEditField] = val;
                 localStorage.setItem('logs', JSON.stringify(logs));
-                renderReport();
+                renderReport(); closeModal();
             }
         }
 
         function renderReport(){
-            const n=document.getElementById('repNameSelect').value,
-                  m=document.getElementById('repMonth').value,
-                  body=document.getElementById('reportItems');
+            const n=document.getElementById('repNameSelect').value,m=document.getElementById('repMonth').value,body=document.getElementById('reportItems');
             body.innerHTML=''; let totalTime=0; if(!n) return;
             const filtered = logs.filter(l=>l.name===n&&l.date.startsWith(m)).sort((a,b)=>new Date(a.date)-new Date(b.date));
             filtered.forEach(l=>{
                 const d=calc(l.in,l.out); totalTime+=d;
                 body.innerHTML+=`<tr class="border-b var(--border)">
-                    <td class="py-4 text-[10px] opacity-60">${getDayName(l.date)} ${l.date}</td>
-                    <td><span class="editable-time" onclick="editLogTime(${l.id}, 'in')">${l.in}</span></td>
-                    <td><span class="editable-time" onclick="editLogTime(${l.id}, 'out')">${l.out}</span></td>
+                    <td class="py-4 text-[10px] opacity-60 text-right"><span class="editable-item" onclick="openEditModal(${l.id}, 'date', '${l.date}')">${getDayName(l.date)} ${l.date}</span></td>
+                    <td><span class="editable-item" onclick="openEditModal(${l.id}, 'in', '${l.in}')">${l.in}</span></td>
+                    <td><span class="editable-item" onclick="openEditModal(${l.id}, 'out', '${l.out}')">${l.out}</span></td>
                     <td class="text-blue-500">${fmt(d)}</td>
                 </tr>`;
             });
@@ -231,41 +200,28 @@
         }
 
         function exportGridPDF() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            const name = document.getElementById('repNameSelect').value;
-            const month = document.getElementById('repMonth').value;
-            const total = document.getElementById('monthTotal').innerText;
+            const { jsPDF } = window.jspdf; const doc = new jsPDF();
+            const n = document.getElementById('repNameSelect').value, m = document.getElementById('repMonth').value, t = document.getElementById('monthTotal').innerText;
             doc.setFontSize(20); doc.text("Sa3aty Work Report", 105, 20, { align: 'center' });
-            doc.setFontSize(12); doc.text(`Employee: ${name}`, 20, 35);
-            doc.text(`Month: ${month}`, 20, 42); doc.text(`Total Duration: ${total} Hr`, 20, 49);
-            let y = 65;
-            doc.setFillColor(240, 240, 240); doc.rect(20, y-7, 170, 10, 'F');
-            doc.text("Day / Date", 25, y); doc.text("In", 85, y); doc.text("Out", 125, y); doc.text("Duration", 165, y);
-            y += 10;
-            logs.filter(l=>l.name===name&&l.date.startsWith(month)).sort((a,b)=>new Date(a.date)-new Date(b.date)).forEach(l=>{
+            doc.setFontSize(12); doc.text(`Employee: ${n} | Month: ${m} | Total: ${t} Hr`, 20, 35);
+            let y = 55; doc.setFillColor(240); doc.rect(20, y-7, 170, 10, 'F');
+            doc.text("Day / Date", 25, y); doc.text("In", 85, y); doc.text("Out", 125, y); doc.text("Duration", 165, y); y+=10;
+            logs.filter(l=>l.name===n&&l.date.startsWith(m)).sort((a,b)=>new Date(a.date)-new Date(b.date)).forEach(l=>{
                 doc.text(`${getDayName(l.date)} ${l.date}`, 25, y); doc.text(l.in, 85, y); doc.text(l.out, 125, y); doc.text(fmt(calc(l.in,l.out)), 165, y);
-                doc.line(20, y+2, 190, y+2); y += 10;
-                if(y > 270) { doc.addPage(); y = 20; }
+                doc.line(20, y+2, 190, y+2); y+=10; if(y>270){doc.addPage(); y=20;}
             });
-            doc.save(`${name}_Report.pdf`);
+            doc.save(`${n}_Report.pdf`);
         }
 
         function exportOldPNG() {
-            const container = document.querySelector("#reportContainer");
-            html2canvas(container, { backgroundColor: getComputedStyle(document.body).backgroundColor, scale: 2 }).then(canvas => {
-                const l = document.createElement('a');
-                l.download = 'Report.png'; l.href = canvas.toDataURL(); l.click();
+            html2canvas(document.querySelector("#reportContainer"), { backgroundColor: getComputedStyle(document.body).backgroundColor, scale: 2 }).then(canvas => {
+                const l = document.createElement('a'); l.download = 'Report.png'; l.href = canvas.toDataURL(); l.click();
             });
         }
 
         function exportXLSX(){
-            const n=document.getElementById('repNameSelect').value,
-                  m=document.getElementById('repMonth').value,
-                  d=logs.filter(l=>l.name===n&&l.date.startsWith(m)).sort((a,b)=>new Date(a.date)-new Date(b.date)).map(l=>({"اليوم":getDayName(l.date),"التاريخ":l.date,"حضور":l.in,"انصراف":l.out,"ساعات":fmt(calc(l.in,l.out))}));
-            const ws=XLSX.utils.json_to_sheet(d),wb=XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb,ws,"Report");
-            XLSX.writeFile(wb,`Sa3aty_${n}.xlsx`);
+            const n=document.getElementById('repNameSelect').value, m=document.getElementById('repMonth').value, d=logs.filter(l=>l.name===n&&l.date.startsWith(m)).sort((a,b)=>new Date(a.date)-new Date(b.date)).map(l=>({"اليوم":getDayName(l.date),"التاريخ":l.date,"حضور":l.in,"انصراف":l.out,"ساعات":fmt(calc(l.in,l.out))}));
+            const ws=XLSX.utils.json_to_sheet(d),wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,"Report"); XLSX.writeFile(wb,`Sa3aty_${n}.xlsx`);
         }
 
         window.onload = () => {
@@ -273,7 +229,7 @@
             document.getElementById('repMonth').value = new Date().toISOString().slice(0, 7);
             setTheme(localStorage.getItem('userTheme') || 'dark');
             renderEmployees(); updateSelectors();
-            if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js?v=12');
+            if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js?v=14');
         };
     </script>
 </body>
